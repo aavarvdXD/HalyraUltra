@@ -1,17 +1,14 @@
 package com.aavarvd.halyra
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-
 import androidx.compose.ui.text.font.FontFamily
-
-import androidx.compose.ui.text.platform.asComposeFontFamily
-
-import java.awt.Font
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.platform.Font
 
 object AppFonts {
-    @Composable
-    fun comfortaa(): FontFamily  = remember {
-        val awtFont =
-    }
+    val JBMono = FontFamily(
+        Font("fonts/JBMono.ttf", FontWeight.Normal)
+    )
+    val Inter = FontFamily(
+        Font("fonts/Inter.ttf", FontWeight.Normal)
+    )
 }
