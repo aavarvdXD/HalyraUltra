@@ -22,7 +22,7 @@ fun SplashScreen() {
             .background(Color(0xFF2B2B2B)),
         contentAlignment = Alignment.Center
     ) {
-        val splashBitmap = useResource("splash.png") { input ->
+        val splashBitmap = useResource("images/splash.png") { input ->
             loadImageBitmap(input)
         }
 

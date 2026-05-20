@@ -11,7 +11,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.window.WindowPosition
-import androidx.compose.ui.window.WindowState
 
 import kotlinx.coroutines.delay
 
@@ -45,7 +44,7 @@ fun main() = application {
         Window(
             onCloseRequest = ::exitApplication,
             title = "Halyra",
-            icon = painterResource("icon.png"),
+            icon = painterResource("images/icon.png"),
             state = rememberWindowState(placement = WindowPlacement.Maximized)
         ) {
             App()

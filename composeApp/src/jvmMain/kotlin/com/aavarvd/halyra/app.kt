@@ -25,9 +25,6 @@ import java.io.File
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 
-import kotlin.math.max
-import kotlin.math.min
-
 @Composable
 fun App() {
     val scrollState = rememberScrollState()
@@ -55,85 +52,39 @@ fun App() {
                     .background(Color(0xFF3C3F41))
                     .padding(8.dp)
             ) {
-                Button(
-                    onClick = {
-                        currentFile?.let { file ->
-                            output = runPython(file)
-                        }
-                    },
-                    elevation = ButtonDefaults.elevation(
-                        defaultElevation = 0.dp,
-                        pressedElevation = 0.dp,
-                        disabledElevation = 0.dp,
-                        hoveredElevation = 0.dp,
-                        focusedElevation = 0.dp
-                    )
-                ) {
-                    Text("Run")
+                AppButton("Run") {
+                    currentFile?.let { file ->
+                        output = runPython(file)
+                    }
                 }
-                Button(
-                    onClick = {
-                        openFile()?.let { (file, content) ->
-                            currentFile = file
-                            text = TextFieldValue(content)
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        backgroundColor = Color(0xFF3C3F41),
-                        contentColor = Color.White
-                    ),
-                    elevation = ButtonDefaults.elevation(
-                        defaultElevation = 0.dp,
-                        pressedElevation = 0.dp,
-                        disabledElevation = 0.dp,
-                        hoveredElevation = 0.dp,
-                        focusedElevation = 0.dp
-                    )
-                ) {
-                    Text("Open")
+                AppButton("Open") {
+                    openFile()?.let { (file, content) ->
+                        currentFile = file
+                        text = TextFieldValue(content)
+                    }
                 }
 
                 Spacer(Modifier.width(8.dp))
 
-                Button(onClick = {
+                AppButton("Save") {
                     if (currentFile != null) {
                         saveFile(currentFile!!, text.text)
                     } else {
                         currentFile = saveFileAs(text.text)
                     }
-                },
-                    elevation = ButtonDefaults.elevation(
-                        defaultElevation = 0.dp,
-                        pressedElevation = 0.dp,
-                        disabledElevation = 0.dp,
-                        hoveredElevation = 0.dp,
-                        focusedElevation = 0.dp
-                    )
-                ) {
-                    Text("Save")
                 }
 
                 Spacer(Modifier.width(8.dp))
 
-                Button(
-                    onClick = {
-                        currentFile = saveFileAs(text.text)
-                    },
-                    elevation = ButtonDefaults.elevation(
-                        defaultElevation = 0.dp,
-                        pressedElevation = 0.dp,
-                        disabledElevation = 0.dp,
-                        hoveredElevation = 0.dp,
-                        focusedElevation = 0.dp
-                    )
-                ) {
-                    Text("Save As")
+                AppButton("Save As") {
+                    currentFile = saveFileAs(text.text)
                 }
+
                 Spacer(Modifier.width(16.dp))
                 Text(
                     text = currentFile?.name ?: "No file",
                     color = androidx.compose.ui.graphics.Color(0xFFBBBBBB),
-                    fontFamily = FontFamily.Monospace
+                    fontFamily = AppFonts.Inter
                 )
             }
             TextField(
@@ -145,7 +96,7 @@ fun App() {
                     .background(Color(0xFF2B2B2B)),
                 textStyle = LocalTextStyle.current.copy(
                     color = Color(0xFFBBBBBB),
-                    fontFamily = FontFamily.Monospace
+                    fontFamily = AppFonts.JBMono
                 ),
                 colors = TextFieldDefaults.textFieldColors(
                     cursorColor = Color.White,
@@ -175,7 +126,7 @@ fun App() {
                     .background(Color.Black)
                     .padding(8.dp),
                 color = Color(0xFFCCCCCC),
-                fontFamily = FontFamily.Monospace
+                fontFamily = AppFonts.JBMono
             )
         }
     }
