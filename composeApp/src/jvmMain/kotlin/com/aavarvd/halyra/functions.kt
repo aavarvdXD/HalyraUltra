@@ -3,7 +3,6 @@ package com.aavarvd.halyra
 import java.awt.FileDialog
 import java.awt.Frame
 import java.io.File
-
 fun openFile(): Pair<File, String>? {
     val dialog = FileDialog(null as Frame?, "Open File", FileDialog.LOAD)
     dialog.isVisible = true

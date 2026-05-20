@@ -1,7 +1,6 @@
 package com.aavarvd.halyra
 
 import java.io.File
-
 fun runPython(file: File): String {
     return try {
         val process = ProcessBuilder("python", file.absolutePath)

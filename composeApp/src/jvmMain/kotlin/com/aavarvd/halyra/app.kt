@@ -7,18 +7,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.focusable
 
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.key.*
 import androidx.compose.ui.platform.LocalDensity
-
 
 import java.io.File
 
@@ -27,7 +27,6 @@ import androidx.compose.runtime.*
 
 @Composable
 fun App() {
-    val scrollState = rememberScrollState()
     val density = LocalDensity.current
     val minTerminalHeightPx = with(density) {60.dp.toPx()}
     val maxTerminalHeightPx = with(density) {420.dp.toPx()}
@@ -36,6 +35,7 @@ fun App() {
     var currentFile by remember { mutableStateOf<File?>(null) }
     var text by remember { mutableStateOf(TextFieldValue(""))}
     var output by remember { mutableStateOf("") }
+
     MaterialTheme(
         colors = darkColors(
             primary = Color(0xFF3C3F41),
@@ -45,18 +45,54 @@ fun App() {
             onBackground = Color(0xFFBBBBBB)
         )
     ) {
-        Column {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .onPreviewKeyEvent { event ->
+                    AppHotkeys(
+                        event,
+                        onSave = {
+                            if (currentFile != null) {
+                                saveFile(currentFile!!, text.text)
+                            } else {
+                                currentFile = saveFileAs(text.text)
+                            }
+                        },
+                        onRun = {
+                            currentFile?.let { file ->
+                                output = runPython(file)
+                            }
+                        },
+                        onNew = {
+                            currentFile = null
+                            text = TextFieldValue("")
+                            output = ""
+                        },
+                        onOpen = {
+                            openFile()?.let { (file, content) ->
+                                currentFile = file
+                                text = TextFieldValue(content)
+                            }
+                        }
+                    )
+                }
+                .focusable()
+        ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color(0xFF3C3F41))
-                    .padding(8.dp)
+                    .padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 AppButton("Run") {
                     currentFile?.let { file ->
                         output = runPython(file)
                     }
                 }
+
+                Spacer(Modifier.width(8.dp))
+
                 AppButton("Open") {
                     openFile()?.let { (file, content) ->
                         currentFile = file
@@ -80,10 +116,11 @@ fun App() {
                     currentFile = saveFileAs(text.text)
                 }
 
-                Spacer(Modifier.width(16.dp))
+                Spacer(Modifier.width(8.dp))
+
                 Text(
-                    text = currentFile?.name ?: "No file",
-                    color = androidx.compose.ui.graphics.Color(0xFFBBBBBB),
+                    text = currentFile?.name ?: "No file Selected",
+                    color = Color(0xFFBBBBBB),
                     fontFamily = AppFonts.Inter
                 )
             }
