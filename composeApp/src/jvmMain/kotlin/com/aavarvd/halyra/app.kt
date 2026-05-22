@@ -36,6 +36,10 @@ fun App() {
     var text by remember { mutableStateOf(TextFieldValue(""))}
     var output by remember { mutableStateOf("") }
 
+    val lineCount = remember(text.text) {
+        text.text.lineSequence().count().coerceAtLeast(1)
+    }
+
     MaterialTheme(
         colors = darkColors(
             primary = Color(0xFF3C3F41),
@@ -82,7 +86,8 @@ fun App() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color(0xFF3C3F41))
-                    .padding(8.dp),
+                    .padding(8.dp)
+                    .weight(1f),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 AppButton("Run") {

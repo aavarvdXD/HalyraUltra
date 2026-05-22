@@ -37,7 +37,7 @@ compose.desktop {
         mainClass = "com.aavarvd.halyra.MainKt"
 
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb, TargetFormat.Exe)
             packageName = "com.aavarvd.halyra"
             packageVersion = "1.0.0"
         }

@@ -8,7 +8,6 @@ import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.rememberWindowState
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.input.key.*
 
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
