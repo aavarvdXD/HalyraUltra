@@ -2,6 +2,7 @@
 
 package com.aavarvd.halyra
 
+// Halyra is a python IDE in development written in Kotlin Compose Desktop
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.WindowPlacement
