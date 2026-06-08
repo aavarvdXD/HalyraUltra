@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.window.WindowDraggableArea
 
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -12,7 +13,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.WindowPlacement
-import androidx.compose.ui.window.WindowDraggableArea
 
 import androidx.compose.material.Text
 import androidx.compose.material.Icon

@@ -43,13 +43,16 @@ fun main() = application {
             SplashScreen()
         }
     } else {
+        val mainWindowState = rememberWindowState( placement = WindowPlacement.Maximized )
+
         Window(
             onCloseRequest = ::exitApplication,
             title = "Halyra",
             icon = painterResource("images/icon.png"),
-            state = rememberWindowState(placement = WindowPlacement.Maximized)
+            state = mainWindowState,
+            undecorated = true
         ) {
-            App()
+            App(mainWindowState)
         }
     }
 }
