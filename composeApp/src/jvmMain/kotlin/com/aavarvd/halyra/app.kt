@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.window.WindowState
+import androidx.compose.ui.window.WindowScope
 
 import java.io.File
 
@@ -49,7 +50,7 @@ internal fun calculateScrollTargetForCaret(
 }
 
 @Composable
-fun App(windowState: WindowState) {
+fun WindowScope.App(windowState: WindowState) {
     val density = LocalDensity.current
     val minTerminalHeightPx = with(density) {60.dp.toPx()}
     val maxTerminalHeightPx = with(density) {420.dp.toPx()}
