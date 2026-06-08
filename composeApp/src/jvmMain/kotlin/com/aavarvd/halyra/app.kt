@@ -17,11 +17,12 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.window.WindowState
 
 import java.io.File
 
@@ -48,7 +49,7 @@ internal fun calculateScrollTargetForCaret(
 }
 
 @Composable
-fun App() {
+fun App(windowState: WindowState) {
     val density = LocalDensity.current
     val minTerminalHeightPx = with(density) {60.dp.toPx()}
     val maxTerminalHeightPx = with(density) {420.dp.toPx()}
@@ -110,158 +111,170 @@ fun App() {
         )
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .onPreviewKeyEvent { event ->
-                    AppHotkeys(
-                        event,
-                        onSave = {
-                            if (currentFile != null) {
-                                saveFile(currentFile!!, text.text)
-                            } else {
-                                currentFile = saveFileAs(text.text)
-                            }
-                        },
-                        onRun = {
-                            currentFile?.let { file ->
-                                output = runPython(file)
-                            }
-                        },
-                        onNew = {
-                            currentFile = null
-                            text = TextFieldValue("")
-                            output = ""
-                        },
-                        onOpen = {
-                            openFile()?.let { (file, content) ->
-                                currentFile = file
-                                text = TextFieldValue(content)
-                            }
-                        }
-                    )
-                }
-                .focusable()
+            modifier = Modifier.fillMaxSize()
         ) {
-            Row(
+
+            AppTitleBar(windowState)
+
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFF3C3F41))
-                    .padding(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .onPreviewKeyEvent { event ->
+                        AppHotkeys(
+                            event,
+                            onSave = {
+                                if (currentFile != null) {
+                                    saveFile(currentFile!!, text.text)
+                                } else {
+                                    currentFile = saveFileAs(text.text)
+                                }
+                            },
+                            onRun = {
+                                currentFile?.let { file ->
+                                    output = runPython(file)
+                                }
+                            },
+                            onNew = {
+                                currentFile = null
+                                text = TextFieldValue("")
+                                output = ""
+                            },
+                            onOpen = {
+                                openFile()?.let { (file, content) ->
+                                    currentFile = file
+                                    text = TextFieldValue(content)
+                                }
+                            }
+                        )
+                    }
+                    .focusable()
             ) {
-                AppButton("Run") {
-                    currentFile?.let { file ->
-                        output = runPython(file)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFF3C3F41))
+                        .padding(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    AppButton("Run") {
+                        currentFile?.let { file ->
+                            output = runPython(file)
+                        }
                     }
-                }
 
-                Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(8.dp))
 
-                AppButton("Open") {
-                    openFile()?.let { (file, content) ->
-                        currentFile = file
-                        text = TextFieldValue(content)
+                    AppButton("Open") {
+                        openFile()?.let { (file, content) ->
+                            currentFile = file
+                            text = TextFieldValue(content)
+                        }
                     }
-                }
 
-                Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(8.dp))
 
-                AppButton("Save") {
-                    if (currentFile != null) {
-                        saveFile(currentFile!!, text.text)
-                    } else {
+                    AppButton("Save") {
+                        if (currentFile != null) {
+                            saveFile(currentFile!!, text.text)
+                        } else {
+                            currentFile = saveFileAs(text.text)
+                        }
+                    }
+
+                    Spacer(Modifier.width(8.dp))
+
+                    AppButton("Save As") {
                         currentFile = saveFileAs(text.text)
                     }
+
+                    Spacer(Modifier.width(8.dp))
+
+                    Text(
+                        text = currentFile?.name ?: "No file Selected",
+                        color = Color(0xFFBBBBBB),
+                        fontFamily = AppFonts.Inter
+                    )
                 }
-
-                Spacer(Modifier.width(8.dp))
-
-                AppButton("Save As") {
-                    currentFile = saveFileAs(text.text)
-                }
-
-                Spacer(Modifier.width(8.dp))
-
-                Text(
-                    text = currentFile?.name ?: "No file Selected",
-                    color = Color(0xFFBBBBBB),
-                    fontFamily = AppFonts.Inter
-                )
-            }
-            Row(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .background(Color(0xFF2B2B2B))
-            ) {
-                // Gutter
-                Column(
+                Row(
                     modifier = Modifier
-                        .width(48.dp)
-                        .fillMaxHeight()
-                        .background(Color(0xFF252525))
-                        .padding(top = 8.dp, end = 8.dp)
-                        .verticalScroll(editorScrollState),
-                    horizontalAlignment = Alignment.End
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .background(Color(0xFF2B2B2B))
                 ) {
-                    for (i in 1..lineCount) {
-                        Text(
-                            text = i.toString(),
-                            color = Color(0xFF666666),
-                            style = editorTextStyle.copy(
+                    // Gutter
+                    Column(
+                        modifier = Modifier
+                            .width(48.dp)
+                            .fillMaxHeight()
+                            .background(Color(0xFF252525))
+                            .padding(top = 8.dp, end = 8.dp)
+                            .verticalScroll(editorScrollState),
+                        horizontalAlignment = Alignment.End
+                    ) {
+                        for (i in 1..lineCount) {
+                            Text(
+                                text = i.toString(),
                                 color = Color(0xFF666666),
-                                textAlign = TextAlign.End
+                                style = editorTextStyle.copy(
+                                    color = Color(0xFF666666),
+                                    textAlign = TextAlign.End
+                                )
                             )
+                        }
+                    }
+
+                    // Editor
+                    CompositionLocalProvider(LocalTextSelectionColors provides editorSelectionColors) {
+                        BasicTextField(
+                            value = text,
+                            onValueChange = { text = it },
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .background(Color(0xFF2B2B2B))
+                                .onSizeChanged { editorViewportHeightPx = it.height }
+                                .verticalScroll(editorScrollState)
+                                .padding(
+                                    start = 4.dp,
+                                    top = editorVerticalPadding,
+                                    end = 8.dp,
+                                    bottom = editorVerticalPadding
+                                ),
+                            textStyle = editorTextStyle,
+                            cursorBrush = SolidColor(Color.White),
+                            onTextLayout = { editorTextLayout = it },
+                            singleLine = false,
                         )
                     }
                 }
 
-                // Editor
-                CompositionLocalProvider(LocalTextSelectionColors provides editorSelectionColors) {
-                    BasicTextField(
-                        value = text,
-                        onValueChange = { text = it },
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight()
-                            .background(Color(0xFF2B2B2B))
-                            .onSizeChanged { editorViewportHeightPx = it.height }
-                            .verticalScroll(editorScrollState)
-                            .padding(start = 4.dp, top = editorVerticalPadding, end = 8.dp, bottom = editorVerticalPadding),
-                        textStyle = editorTextStyle,
-                        cursorBrush = SolidColor(Color.White),
-                        onTextLayout = { editorTextLayout = it },
-                        singleLine = false,
-                    )
-                }
-            }
+                Spacer(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .background(Color(0xFF3C3F41))
+                        .pointerInput(Unit) {
+                            detectDragGestures { change, dragAmount ->
+                                change.consume()
 
-            Spacer(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(6.dp)
-                    .background(Color(0xFF3C3F41))
-                    .pointerInput(Unit) {
-                        detectDragGestures{ change, dragAmount ->
-                            change.consume()
-
-                            terminalHeightPx = (terminalHeightPx - dragAmount.y)
-                                .coerceIn(minTerminalHeightPx, maxTerminalHeightPx)
+                                terminalHeightPx = (terminalHeightPx - dragAmount.y)
+                                    .coerceIn(minTerminalHeightPx, maxTerminalHeightPx)
+                            }
                         }
-                    }
-            )
+                )
 
-            // Console
-            Text(
-                text = output,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(with(density) { terminalHeightPx.toDp() })
-                    .background(Color.Black)
-                    .padding(8.dp),
-                color = Color(0xFFCCCCCC),
-                fontFamily = AppFonts.JBMono
-            )
+                // Console
+                Text(
+                    text = output,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(with(density) { terminalHeightPx.toDp() })
+                        .background(Color.Black)
+                        .padding(8.dp),
+                    color = Color(0xFFCCCCCC),
+                    fontFamily = AppFonts.JBMono
+                )
+            }
         }
     }
 }
