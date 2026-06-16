@@ -243,6 +243,7 @@ fun WindowScope.App(windowState: WindowState) {
                                 ),
                             textStyle = editorTextStyle,
                             cursorBrush = SolidColor(Color.White),
+                            visualTransformation = PythonHighLightTransformation(),
                             onTextLayout = { editorTextLayout = it },
                             singleLine = false,
                         )
