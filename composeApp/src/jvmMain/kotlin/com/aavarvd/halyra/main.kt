@@ -17,6 +17,9 @@ import androidx.compose.ui.window.WindowPosition
 
 import kotlinx.coroutines.delay
 
+import java.awt.Rectangle
+import java.awt.Toolkit
+
 import kotlin.time.Duration.Companion.milliseconds
 
 fun main() = application {
@@ -52,6 +55,25 @@ fun main() = application {
             state = mainWindowState,
             undecorated = true
         ) {
+            LaunchedEffect(Unit) {
+                fun applyMaximizedBounds() {
+                    val gc = window.graphicsConfiguration
+                    val insets = Toolkit.getDefaultToolkit().getScreenInsets(gc)
+                    val screenBounds = gc.bounds
+                    window.maximizedBounds = Rectangle(
+                        screenBounds.x + insets.left,
+                        screenBounds.y + insets.top,
+                        screenBounds.width - insets.left - insets.right,
+                        screenBounds.height - insets.top - insets.bottom
+                    )
+                }
+
+                applyMaximizedBounds()
+
+                window.addPropertyChangeListener("graphicsConfiguration") {
+                    applyMaximizedBounds()
+                }
+            }
             App(mainWindowState)
         }
     }
