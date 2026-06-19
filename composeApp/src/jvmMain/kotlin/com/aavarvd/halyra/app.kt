@@ -122,7 +122,9 @@ fun WindowScope.App(windowState: WindowState) {
                     .fillMaxWidth()
                     .onPreviewKeyEvent { event ->
                         AppHotkeys(
-                            event,
+                            event = event,
+                            text = text,
+                            onTextChange = { text = it },
                             onSave = {
                                 if (currentFile != null) {
                                     saveFile(currentFile!!, text.text)
@@ -143,6 +145,7 @@ fun WindowScope.App(windowState: WindowState) {
                             onOpen = {
                                 openFile()?.let { (file, content) ->
                                     currentFile = file
+                                    output = ""
                                     text = TextFieldValue(content)
                                 }
                             }
