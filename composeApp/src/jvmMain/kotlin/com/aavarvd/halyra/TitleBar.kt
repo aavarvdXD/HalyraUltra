@@ -73,8 +73,15 @@ fun TitleBarButton(
         modifier = Modifier
             .width(46.dp)
             .fillMaxHeight()
+            .hoverable(interactionSource)
             .clickable { onClick() }
-            .background(if (hovered && text == "✕") Color(0xFFE81123) else if (hovered) Color(0xFF515151) else Color(0xFF2B2B2B)),
+            .background(
+                when {
+                    hovered && text == "✕" -> Color(0xFFB22222)
+                    hovered -> Color(0xFF515151)
+                    else -> Color(0xFF2B2B2B)
+                }
+            ),
         contentAlignment = Alignment.Center
     ) {
         Text(
