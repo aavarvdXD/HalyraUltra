@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.window.WindowDraggableArea
+import androidx.compose.foundation.hoverable
 
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -73,7 +74,7 @@ fun TitleBarButton(
             .width(46.dp)
             .fillMaxHeight()
             .clickable { onClick() }
-            .background(if (hovered) Color(0xFF515151) else Color(0xFF2B2B2B)),
+            .background(if (hovered && text == "✕") Color(0xFFE81123) else if (hovered) Color(0xFF515151) else Color(0xFF2B2B2B)),
         contentAlignment = Alignment.Center
     ) {
         Text(
