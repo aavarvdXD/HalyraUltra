@@ -53,7 +53,8 @@ fun main() = application {
             title = "Halyra",
             icon = painterResource("images/icon.png"),
             state = mainWindowState,
-            undecorated = true
+            undecorated = true,
+            resizable = mainWindowState.placement != WindowPlacement.Maximized
         ) {
             LaunchedEffect(Unit) {
                 fun applyMaximizedBounds() {

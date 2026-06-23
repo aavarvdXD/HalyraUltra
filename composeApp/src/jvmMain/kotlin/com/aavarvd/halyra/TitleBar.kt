@@ -23,40 +23,47 @@ import androidx.compose.ui.window.WindowScope
 
 @Composable
 fun WindowScope.AppTitleBar(windowState: WindowState) {
-    WindowDraggableArea {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(32.dp)
-                .background(Color(0xFF2B2B2B))
+    val isMaximized = windowState.placement == WindowPlacement.Maximized
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(32.dp)
+            .background(Color(0xFF2B2B2B))
+    ) {
+        // Only make draggable when not maximized
+        if (!isMaximized) {
+            WindowDraggableArea {
+                Box(modifier = Modifier.fillMaxSize())
+            }
+        }
+
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.fillMaxSize(),
-                verticalAlignment = Alignment.CenterVertically
+            Text(
+                text = "Halyra",
+                color = Color(0xFF56b5c3),
+                fontFamily = AppFonts.Inter,
+                modifier = Modifier.padding(start = 12.dp)
+            )
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            TitleBarButton("─") {
+                windowState.isMinimized = true
+            }
+
+            TitleBarButton(
+                if (windowState.placement == WindowPlacement.Maximized) "❐" else "□"
             ) {
-                Text(
-                    text = "Halyra",
-                    color = Color(0xFF56b5c3),
-                    fontFamily = AppFonts.Inter,
-                    modifier = Modifier.padding(start = 12.dp)
-                )
+                windowState.placement =
+                    if (windowState.placement == WindowPlacement.Maximized) WindowPlacement.Floating else WindowPlacement.Maximized
+            }
 
-                Spacer(modifier = Modifier.weight(1f))
-
-                TitleBarButton("─") {
-                    windowState.isMinimized = true
-                }
-
-                TitleBarButton(
-                    if (windowState.placement == WindowPlacement.Maximized) "❐" else "□"
-                ) {
-                    windowState.placement =
-                        if (windowState.placement == WindowPlacement.Maximized) WindowPlacement.Floating else WindowPlacement.Maximized
-                }
-
-                TitleBarButton("✕") {
-                    kotlin.system.exitProcess(0)
-                }
+            TitleBarButton("✕") {
+                kotlin.system.exitProcess(0)
             }
         }
     }
