@@ -14,6 +14,41 @@ fun AppHotkeys(
     onOpen: () -> Unit
 ): Boolean {
 
+    // Indenting
+    if (
+        event.type == KeyEventType.KeyDown &&
+        event.key == Key.Backspace
+    ) {
+        val cursor = text.selection.start
+        val fullText = text.text
+
+        if (cursor > 0) {
+            val beforeCursor = fullText.substring(0, cursor)
+            val afterCursor = fullText.substring(text.selection.end)
+
+            val lastChunk = beforeCursor.takeLast(4)
+
+            val isOnlySpaces = lastChunk.all { it == ' ' }
+
+            val deleteCount =
+                if (isOnlySpaces) lastChunk.length
+                else 1
+
+            val newCursor = cursor - deleteCount
+
+            val newText =
+                beforeCursor.dropLast(deleteCount) + afterCursor
+
+            onTextChange(
+                TextFieldValue(
+                    text = newText,
+                    selection = TextRange(newCursor)
+                )
+            )
+        }
+        return true
+    }
+
     // Save
     if (
         event.type == KeyEventType.KeyDown &&

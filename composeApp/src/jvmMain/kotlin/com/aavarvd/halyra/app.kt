@@ -29,6 +29,7 @@ import java.io.File
 
 import androidx.compose.material.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.text.TextRange
 import kotlin.math.roundToInt
 
 internal fun calculateScrollTargetForCaret(
@@ -231,7 +232,55 @@ fun WindowScope.App(windowState: WindowState) {
                     CompositionLocalProvider(LocalTextSelectionColors provides editorSelectionColors) {
                         BasicTextField(
                             value = text,
-                            onValueChange = { text = it },
+                            onValueChange = { newValue ->
+
+                                val oldText = text.text
+                                val newText = newValue.text
+
+                                val oldSelection = text.selection
+                                val newSelection = newValue.selection
+
+                                // Detect Enter
+                                val insertedNewLine =
+                                    newText.length == oldText.length + 1 &&
+                                    newSelection.start > 0 &&
+                                    newText[newSelection.start - 1] == '\n'
+
+                                if (insertedNewLine) {
+                                    val cursor = newSelection.start
+
+                                    val beforeCursor = newText.substring(0, cursor)
+                                    val lines = beforeCursor.split('\n')
+
+                                    if (lines.size >= 2) {
+                                        val prevLine = lines[lines.size - 2]
+
+                                        val baseIndent =
+                                            prevLine.takeWhile { it == ' ' || it == '\t' }
+
+                                        val extraIndent =
+                                            if (prevLine.trimEnd().endsWith(":")) "    "
+                                            else ""
+
+                                        val indent = baseIndent + extraIndent
+
+                                        val finalText =
+                                            newText.substring(0, cursor) +
+                                            indent +
+                                            newText.substring(cursor)
+
+                                        val finalCursor = cursor + indent.length
+
+                                        text = TextFieldValue(
+                                            finalText,
+                                            selection = TextRange(finalCursor)
+                                        )
+
+                                        return@BasicTextField
+                                    }
+                                }
+                                text = newValue
+                            },
                             modifier = Modifier
                                 .weight(1f)
                                 .fillMaxHeight()
