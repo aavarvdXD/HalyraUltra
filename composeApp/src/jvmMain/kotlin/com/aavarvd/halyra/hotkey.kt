@@ -19,6 +19,22 @@ fun AppHotkeys(
         event.type == KeyEventType.KeyDown &&
         event.key == Key.Backspace
     ) {
+        if (!text.selection.collapsed) {
+            val newText = text.text.removeRange(
+                text.selection.start,
+                text.selection.end
+            )
+
+            onTextChange(
+                TextFieldValue(
+                    newText,
+                    selection = TextRange(text.selection.start)
+                )
+            )
+
+            return true
+        }
+
         val cursor = text.selection.start
         val fullText = text.text
 
@@ -46,6 +62,17 @@ fun AppHotkeys(
                 )
             )
         }
+        return true
+    }
+
+    if (
+        event.type == KeyEventType.KeyDown &&
+        event.key == Key.Tab &&
+        event.isShiftPressed
+    ) {
+        onTextChange(
+            dedentSelection(text)
+        )
         return true
     }
 
@@ -96,18 +123,10 @@ fun AppHotkeys(
 
     if (
         event.type == KeyEventType.KeyDown &&
-        event.key == Key.Tab
+        event.key == Key.Tab &&
+        !event.isShiftPressed
     ) {
-        val tab = "    "
-
-        val newValue = TextFieldValue(
-            text = text.text.substring(0, text.selection.min) +
-                   tab +
-                   text.text.substring(text.selection.end),
-            selection = TextRange(text.selection.start + tab.length)
-        )
-
-        onTextChange(newValue)
+        onTextChange(indentSelection(text))
         return true
     }
 
