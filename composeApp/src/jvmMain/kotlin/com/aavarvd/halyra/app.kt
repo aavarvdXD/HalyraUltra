@@ -24,12 +24,20 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.WindowScope
-
 import java.io.File
 
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.text.TextRange
+import com.aavarvd.halyra.editor.AppHotkeys
+import com.aavarvd.halyra.editor.PythonHighLightTransformation
+import com.aavarvd.halyra.io.openFile
+import com.aavarvd.halyra.io.runPython
+import com.aavarvd.halyra.io.saveFile
+import com.aavarvd.halyra.io.saveFileAs
+import com.aavarvd.halyra.ui.AppButton
+import com.aavarvd.halyra.ui.AppFonts
+import com.aavarvd.halyra.ui.AppTitleBar
 import kotlin.math.roundToInt
 
 internal fun calculateScrollTargetForCaret(
@@ -53,12 +61,12 @@ internal fun calculateScrollTargetForCaret(
 @Composable
 fun WindowScope.App(windowState: WindowState) {
     val density = LocalDensity.current
-    val minTerminalHeightPx = with(density) {60.dp.toPx()}
-    val maxTerminalHeightPx = with(density) {420.dp.toPx()}
+    val minTerminalHeightPx = with(density) { 60.dp.toPx() }
+    val maxTerminalHeightPx = with(density) { 420.dp.toPx() }
 
     var terminalHeightPx by remember { mutableStateOf(with(density) { 160.dp.toPx() }) }
     var currentFile by remember { mutableStateOf<File?>(null) }
-    var text by remember { mutableStateOf(TextFieldValue(""))}
+    var text by remember { mutableStateOf(TextFieldValue("")) }
     var output by remember { mutableStateOf("") }
     var editorViewportHeightPx by remember { mutableStateOf(0) }
     var editorTextLayout by remember { mutableStateOf<TextLayoutResult?>(null) }
@@ -233,11 +241,9 @@ fun WindowScope.App(windowState: WindowState) {
                         BasicTextField(
                             value = text,
                             onValueChange = { newValue ->
-
                                 val oldText = text.text
                                 val newText = newValue.text
 
-                                val oldSelection = text.selection
                                 val newSelection = newValue.selection
 
                                 // Detect Enter
@@ -264,10 +270,7 @@ fun WindowScope.App(windowState: WindowState) {
 
                                         val indent = baseIndent + extraIndent
 
-                                        val finalText =
-                                            newText.substring(0, cursor) +
-                                            indent +
-                                            newText.substring(cursor)
+                                        val finalText = newText.substring(0, cursor) + indent + newText.substring(cursor)
 
                                         val finalCursor = cursor + indent.length
 

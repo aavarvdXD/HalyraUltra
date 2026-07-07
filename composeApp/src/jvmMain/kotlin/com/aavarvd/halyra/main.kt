@@ -9,17 +9,14 @@ import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.rememberWindowState
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.window.WindowPosition
-
+import com.aavarvd.halyra.ui.SplashScreen
 import kotlinx.coroutines.delay
-
 import java.awt.Rectangle
 import java.awt.Toolkit
-
 import kotlin.time.Duration.Companion.milliseconds
 
 fun main() = application {
@@ -46,7 +43,7 @@ fun main() = application {
             SplashScreen()
         }
     } else {
-        val mainWindowState = rememberWindowState( placement = WindowPlacement.Maximized )
+        val mainWindowState = rememberWindowState(placement = WindowPlacement.Maximized)
 
         Window(
             onCloseRequest = ::exitApplication,
