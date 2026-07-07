@@ -59,7 +59,7 @@ internal fun calculateScrollTargetForCaret(
 }
 
 @Composable
-fun WindowScope.App(windowState: WindowState) {
+fun WindowScope.App(windowState: WindowState, useCustomTitlebar: Boolean) {
     val density = LocalDensity.current
     val minTerminalHeightPx = with(density) { 60.dp.toPx() }
     val maxTerminalHeightPx = with(density) { 420.dp.toPx() }
@@ -124,7 +124,9 @@ fun WindowScope.App(windowState: WindowState) {
             modifier = Modifier.fillMaxSize()
         ) {
 
-            AppTitleBar(windowState)
+            if (useCustomTitlebar) {
+                AppTitleBar(windowState)
+            }
 
             Column(
                 modifier = Modifier

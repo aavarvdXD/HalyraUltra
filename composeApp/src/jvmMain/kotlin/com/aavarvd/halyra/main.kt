@@ -93,6 +93,9 @@ private fun clampWindowToBounds(window: Window, bounds: Rectangle) {
 }
 
 fun main() = application {
+    // Set to false to use system default titlebar
+    val useCustomTitlebar = true
+
     var showSplash by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
@@ -123,39 +126,41 @@ fun main() = application {
             title = "Halyra",
             icon = painterResource("images/icon.png"),
             state = mainWindowState,
-            undecorated = true,
-            resizable = mainWindowState.placement != WindowPlacement.Maximized
+            undecorated = useCustomTitlebar,
+            resizable = mainWindowState.placement != WindowPlacement.Maximized || !useCustomTitlebar
         ) {
-            DisposableEffect(window) {
-                fun applyMaxBounds() {
-                    window.graphicsConfiguration?.let { cfg ->
-                        val b = usableBounds(cfg)
-                        window.maximizedBounds = b
-                        if (mainWindowState.placement == WindowPlacement.Maximized) {
-                            java.awt.EventQueue.invokeLater {
-                                (window as? java.awt.Frame)?.extendedState = java.awt.Frame.MAXIMIZED_BOTH
+            if (useCustomTitlebar) {
+                DisposableEffect(window) {
+                    fun applyMaxBounds() {
+                        window.graphicsConfiguration?.let { cfg ->
+                            val b = usableBounds(cfg)
+                            window.maximizedBounds = b
+                            if (mainWindowState.placement == WindowPlacement.Maximized) {
+                                java.awt.EventQueue.invokeLater {
+                                    (window as? java.awt.Frame)?.extendedState = java.awt.Frame.MAXIMIZED_BOTH
+                                }
+                            } else {
+                                clampWindowToBounds(window, b)
                             }
-                        } else {
-                            clampWindowToBounds(window, b)
                         }
                     }
-                }
 
-                applyMaxBounds()
+                    applyMaxBounds()
 
-                val propertyListener = PropertyChangeListener { event ->
-                    if (event.propertyName == "graphicsConfiguration") {
-                        applyMaxBounds()
+                    val propertyListener = PropertyChangeListener { event ->
+                        if (event.propertyName == "graphicsConfiguration") {
+                            applyMaxBounds()
+                        }
+                    }
+
+                    window.addPropertyChangeListener(propertyListener)
+
+                    onDispose {
+                        window.removePropertyChangeListener(propertyListener)
                     }
                 }
-
-                window.addPropertyChangeListener(propertyListener)
-
-                onDispose {
-                    window.removePropertyChangeListener(propertyListener)
-                }
             }
-            App(mainWindowState)
+            App(mainWindowState, useCustomTitlebar)
         }
     }
 }
