@@ -13,8 +13,9 @@ class PythonHighLightTransformation : VisualTransformation {
     val functionCallColor = Color(0xFF61AFEF)
     val variableColor = Color(0xFF9CDCFE)
 
-    val classRegex = Regex("\\bclass\\s+([A-Za-z_]\\w)")
-    val defRegex = Regex("\\bdef\\s+([A-Za-z_]\\w)")
+    // Fixed: added * to capture full name (not just first character)
+    val classRegex = Regex("\\bclass\\s+([A-Za-z_]\\w*)")
+    val defRegex = Regex("\\bdef\\s+([A-Za-z_]\\w*)")
     val callRegex = Regex("\\b([A-Za-z_]\\w*)\\s*\\(")
     val assignRegex = Regex("\\b([A-za-z_]\\w*)\\s*=(?!=)")
 
@@ -104,24 +105,26 @@ class PythonHighLightTransformation : VisualTransformation {
                 )
             }
 
-        defRegex.findAll(code).forEach { match ->
-            val range = match.groups[1]?.range ?: return@forEach
-
-            if (!isInsideString(range.first) && !isInsideComment(range.first)) {
-                highlighted.addStyle(
-                    SpanStyle(color = functionDefColor),
-                    range.first,
-                    range.last + 1
-                )
-            }
-        }
-
+        // Apply class highlighting BEFORE function highlighting
+        // so that class names take precedence
         classRegex.findAll(code).forEach { match ->
             val range = match.groups[1]?.range ?: return@forEach
 
             if (!isInsideString(range.first) && !isInsideComment(range.first)) {
                 highlighted.addStyle(
                     SpanStyle(color = classDefColor),
+                    range.first,
+                    range.last + 1
+                )
+            }
+        }
+
+        defRegex.findAll(code).forEach { match ->
+            val range = match.groups[1]?.range ?: return@forEach
+
+            if (!isInsideString(range.first) && !isInsideComment(range.first)) {
+                highlighted.addStyle(
+                    SpanStyle(color = functionDefColor),
                     range.first,
                     range.last + 1
                 )
