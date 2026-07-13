@@ -94,7 +94,7 @@ private fun clampWindowToBounds(window: Window, bounds: Rectangle) {
 
 fun main() = application {
     // Set to false to use system default titlebar
-    val useCustomTitlebar = true
+    val useCustomTitlebar = false
 
     var showSplash by remember { mutableStateOf(true) }
 
