@@ -1,6 +1,11 @@
 package com.aavarvd.halyra.editor.lexer
 
 enum class TokenType {
+
+    FUNCTION_NAME,
+    CLASS_NAME,
+    FUNCTION_CALL,
+
     KEYWORD,
     IDENTIFIER,
     BUILTIN,
