@@ -17,49 +17,34 @@ fun AppHotkeys(
         event.type == KeyEventType.KeyDown &&
         event.key == Key.Backspace
     ) {
-        if (!text.selection.collapsed) {
-            val newText = text.text.removeRange(
-                text.selection.start,
-                text.selection.end
-            )
+        val selectionStart = minOf(text.selection.start, text.selection.end)
+        val selectionEnd = maxOf(text.selection.start, text.selection.end)
 
+        if (selectionStart != selectionEnd) {
             onTextChange(
                 TextFieldValue(
-                    newText,
-                    selection = TextRange(text.selection.start)
+                    text.text.removeRange(selectionStart, selectionEnd),
+                    selection = TextRange(selectionStart)
                 )
             )
-
             return true
         }
 
-        val cursor = text.selection.start
-        val fullText = text.text
-
-        if (cursor > 0) {
-            val beforeCursor = fullText.substring(0, cursor)
-            val afterCursor = fullText.substring(text.selection.end)
-
+        if (selectionStart > 0) {
+            val beforeCursor = text.text.substring(0, selectionStart)
+            val afterCursor = text.text.substring(selectionEnd)
             val lastChunk = beforeCursor.takeLast(4)
-
-            val isOnlySpaces = lastChunk.all { it == ' ' }
-
-            val deleteCount =
-                if (isOnlySpaces) lastChunk.length
-                else 1
-
-            val newCursor = cursor - deleteCount
-
-            val newText =
-                beforeCursor.dropLast(deleteCount) + afterCursor
+            val deleteCount = if (lastChunk.all { it == ' ' }) lastChunk.length else 1
+            val newCursor = selectionStart - deleteCount
 
             onTextChange(
                 TextFieldValue(
-                    text = newText,
+                    text = beforeCursor.dropLast(deleteCount) + afterCursor,
                     selection = TextRange(newCursor)
                 )
             )
         }
+
         return true
     }
 
@@ -68,13 +53,10 @@ fun AppHotkeys(
         event.key == Key.Tab &&
         event.isShiftPressed
     ) {
-        onTextChange(
-            dedentSelection(text)
-        )
+        onTextChange(dedentSelection(text))
         return true
     }
 
-    // Save
     if (
         event.type == KeyEventType.KeyDown &&
         event.isCtrlPressed &&
@@ -86,7 +68,6 @@ fun AppHotkeys(
         return true
     }
 
-    // Open
     if (
         event.type == KeyEventType.KeyDown &&
         event.isCtrlPressed &&
@@ -98,7 +79,6 @@ fun AppHotkeys(
         return true
     }
 
-    // Run
     if (
         event.type == KeyEventType.KeyDown &&
         event.key == Key.F5
@@ -107,7 +87,6 @@ fun AppHotkeys(
         return true
     }
 
-    // New
     if (
         event.type == KeyEventType.KeyDown &&
         event.isCtrlPressed &&
@@ -124,19 +103,7 @@ fun AppHotkeys(
         event.key == Key.Tab &&
         !event.isShiftPressed
     ) {
-        val newValue = indentSelection(text)
-
-        println("===== TAB =====")
-        println("Before:")
-        println(text.text)
-
-        println("After:")
-        println(newValue.text)
-
-        println("Selection: ${text.selection}")
-        println("Changed: ${newValue.text != text.text}")
-
-        onTextChange(newValue)
+        onTextChange(indentSelection(text))
         return true
     }
 

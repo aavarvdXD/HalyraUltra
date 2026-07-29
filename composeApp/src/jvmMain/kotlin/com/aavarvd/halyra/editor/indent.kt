@@ -11,49 +11,50 @@ fun indentSelection(
     val selection = value.selection
 
     if (selection.collapsed) {
-        val newText =
-            text.substring(0, selection.start) +
-            indent +
-            text.substring(selection.end)
+        val cursor = selection.start
+        val newText = text.substring(0, cursor) + indent + text.substring(cursor)
 
         return TextFieldValue(
             text = newText,
-            selection = TextRange(selection.start + indent.length)
+            selection = TextRange(cursor + indent.length)
         )
     }
 
-    val rangeStart = minOf(selection.start, selection.end)
-    val rangeEnd = maxOf(selection.start, selection.end)
+    val linesToIndent = getLinesTouchedByRange(
+        text = text,
+        rangeStart = minOf(selection.start, selection.end),
+        rangeEnd = maxOf(selection.start, selection.end)
+    )
 
-    val linesToIndent = getLinesTouchedByRange(text, rangeStart, rangeEnd)
-    
     if (linesToIndent.isEmpty()) {
         return value
     }
 
-    val lines = text.split("\n").toMutableList()
-    var totalIndentAdded = 0
-    
-    for (lineIndex in linesToIndent) {
-        lines[lineIndex] = indent + lines[lineIndex]
-        totalIndentAdded += indent.length
+    val lineStarts = lineStartOffsets(text)
+    val newText = buildString(text.length + linesToIndent.size * indent.length) {
+        var previousOffset = 0
+
+        for (lineIndex in linesToIndent) {
+            val lineStart = lineStarts[lineIndex]
+            append(text, previousOffset, lineStart)
+            append(indent)
+            previousOffset = lineStart
+        }
+
+        append(text, previousOffset, text.length)
     }
 
-    val newText = lines.joinToString("\n")
-
-    val newSelection = if (selection.collapsed) {
-        val firstLineStart = getLineStartOffset(text, linesToIndent.first())
-        TextRange(firstLineStart + indent.length)
-    } else {
-        TextRange(
-            start = selection.start + totalIndentAdded,
-            end = selection.end + totalIndentAdded
-        )
+    fun adjustedOffset(offset: Int): Int {
+        val insertedBeforeOrAtOffset = linesToIndent.count { lineStarts[it] <= offset }
+        return offset + insertedBeforeOrAtOffset * indent.length
     }
 
     return TextFieldValue(
         text = newText,
-        selection = newSelection
+        selection = TextRange(
+            start = adjustedOffset(selection.start),
+            end = adjustedOffset(selection.end)
+        )
     )
 }
 
@@ -63,68 +64,53 @@ fun dedentSelection(
 ): TextFieldValue {
     val text = value.text
     val selection = value.selection
+    val cursor = selection.start
 
-    val (rangeStart, rangeEnd) = if (selection.collapsed) {
-        val cursorPos = selection.start
-        val isAtLineStart = cursorPos == 0 || (cursorPos > 0 && text.getOrNull(cursorPos - 1) == '\n')
-
-        if (isAtLineStart && cursorPos > 0) {
-            val prevNewlinePos = text.lastIndexOf('\n', cursorPos - 1)
-            val lineStart = prevNewlinePos + 1
-
-            val nextNewlinePos = text.indexOf('\n', cursorPos)
-            val lineEnd = if (nextNewlinePos == -1) text.length else nextNewlinePos
-
-            val currentLine = text.substring(lineStart, lineEnd)
-            val isCurrentLineBlank = currentLine.isBlank()
-
-            if (isCurrentLineBlank) {
-                lineStart to lineStart
-            } else {
-                val prevLineEnd = prevNewlinePos
-                val prevLineStart = if (prevLineEnd >= 0) text.lastIndexOf('\n', prevLineEnd - 1) + 1 else 0
-                prevLineStart to prevLineStart
-            }
-        } else {
-            val lineRange = getLineRangeForOffset(text, selection.start)
-            lineRange.first to lineRange.first
-        }
+    val linesToDedent = if (selection.collapsed) {
+        listOf(lineIndexForOffset(text, cursor))
     } else {
-        minOf(selection.start, selection.end) to maxOf(selection.start, selection.end)
+        getLinesTouchedByRange(
+            text = text,
+            rangeStart = minOf(selection.start, selection.end),
+            rangeEnd = maxOf(selection.start, selection.end)
+        )
     }
 
-    val linesToDedent = getLinesTouchedByRange(text, rangeStart, rangeEnd)
-    
     if (linesToDedent.isEmpty()) {
         return value
     }
 
     val lines = text.split("\n").toMutableList()
-    var totalCharsRemoved = 0
-    
+    val lineStarts = lineStartOffsets(text)
+    val removedByLine = IntArray(lines.size)
+
     for (lineIndex in linesToDedent) {
-        val line = lines[lineIndex]
-        val (newLine, charsRemoved) = removeIndentFromLine(line, indentSize)
+        val (newLine, charsRemoved) = removeIndentFromLine(lines[lineIndex], indentSize)
         lines[lineIndex] = newLine
-        totalCharsRemoved += charsRemoved
+        removedByLine[lineIndex] = charsRemoved
     }
 
-    val newText = lines.joinToString("\n")
+    fun adjustedOffset(offset: Int): Int {
+        var removed = 0
 
-    val newSelection = if (selection.collapsed) {
-        val firstLineStart = getLineStartOffset(text, linesToDedent.first())
-        val newCursor = (selection.start - totalCharsRemoved).coerceAtLeast(firstLineStart)
-        TextRange(newCursor)
-    } else {
-        TextRange(
-            start = (selection.start - totalCharsRemoved).coerceAtLeast(0),
-            end = (selection.end - totalCharsRemoved).coerceAtLeast(0)
-        )
+        for (lineIndex in linesToDedent) {
+            val lineStart = lineStarts[lineIndex]
+            if (offset <= lineStart) {
+                continue
+            }
+
+            removed += minOf(removedByLine[lineIndex], offset - lineStart)
+        }
+
+        return (offset - removed).coerceAtLeast(0)
     }
 
     return TextFieldValue(
-        text = newText,
-        selection = newSelection
+        text = lines.joinToString("\n"),
+        selection = TextRange(
+            start = adjustedOffset(selection.start),
+            end = adjustedOffset(selection.end)
+        )
     )
 }
 
@@ -141,13 +127,16 @@ private fun removeIndentFromLine(line: String, indentSize: Int): Pair<String, In
             val removeCount = leadingSpaces.length.coerceAtMost(indentSize)
             line.drop(removeCount) to removeCount
         }
+
         leadingTabs.isNotEmpty() && leadingSpaces.isEmpty() -> {
             line.drop(1) to 1
         }
+
         leadingSpaces.isNotEmpty() -> {
             val removeCount = leadingSpaces.length.coerceAtMost(indentSize)
             line.drop(removeCount) to removeCount
         }
+
         else -> line to 0
     }
 }
@@ -165,14 +154,15 @@ private fun getLinesTouchedByRange(text: String, rangeStart: Int, rangeEnd: Int)
         val lineEnd = text.indexOf('\n', currentOffset).let {
             if (it == -1) text.length else it
         }
-        val lineStart = currentOffset
         val effectiveLineEnd = if (lineEnd < text.length) lineEnd + 1 else lineEnd
 
-        if (lineStart <= rangeEnd && effectiveLineEnd >= rangeStart) {
-            lines.add(lineIndex)
+        if (currentOffset <= rangeEnd && effectiveLineEnd >= rangeStart) {
+            lines += lineIndex
         }
 
-        if (lineEnd >= text.length) break
+        if (lineEnd >= text.length) {
+            break
+        }
 
         currentOffset = lineEnd + 1
         lineIndex++
@@ -181,41 +171,27 @@ private fun getLinesTouchedByRange(text: String, rangeStart: Int, rangeEnd: Int)
     return lines
 }
 
-private fun getLineRangeForOffset(text: String, offset: Int): IntRange {
-    if (text.isEmpty()) {
-        return 0..0
+private fun lineStartOffsets(text: String): List<Int> {
+    val offsets = mutableListOf(0)
+
+    text.forEachIndexed { index, character ->
+        if (character == '\n') {
+            offsets += index + 1
+        }
     }
 
-    val clampedOffset = offset.coerceIn(0, text.length)
-    
-    val lineStart = text.lastIndexOf('\n', clampedOffset - 1) + 1
-    val lineEnd = text.indexOf('\n', clampedOffset).let {
-        if (it == -1) text.length else it
-    }
-
-    return lineStart..lineEnd
+    return offsets
 }
 
-private fun getLineStartOffset(text: String, lineIndex: Int): Int {
-    if (lineIndex < 0) return 0
-    if (text.isEmpty()) return 0
+private fun lineIndexForOffset(text: String, offset: Int): Int {
+    val clampedOffset = offset.coerceIn(0, text.length)
+    var lineIndex = 0
 
-    var currentOffset = 0
-    var currentLine = 0
-
-    while (currentOffset < text.length) {
-        if (currentLine == lineIndex) {
-            return currentOffset
+    for (index in 0 until clampedOffset) {
+        if (text[index] == '\n') {
+            lineIndex++
         }
-        
-        val nextNewline = text.indexOf('\n', currentOffset)
-        if (nextNewline == -1) {
-            return if (currentLine + 1 == lineIndex) text.length else 0
-        }
-        
-        currentOffset = nextNewline + 1
-        currentLine++
     }
 
-    return if (currentLine == lineIndex) text.length else 0
+    return lineIndex
 }

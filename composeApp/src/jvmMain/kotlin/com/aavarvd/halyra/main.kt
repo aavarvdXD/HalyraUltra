@@ -2,17 +2,16 @@
 
 package com.aavarvd.halyra
 
-// Halyra is a python IDE in development written in Kotlin Compose Desktop
-import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.application
-import androidx.compose.ui.window.WindowPlacement
-import androidx.compose.ui.window.rememberWindowState
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.WindowPosition
+import androidx.compose.ui.window.application
+import androidx.compose.ui.window.rememberWindowState
 import com.aavarvd.halyra.ui.SplashScreen
 import kotlinx.coroutines.delay
 import java.awt.GraphicsConfiguration
@@ -20,11 +19,11 @@ import java.awt.GraphicsEnvironment
 import java.awt.Point
 import java.awt.Rectangle
 import java.awt.Toolkit
-import java.awt.Window
+import java.awt.Window as AwtWindow
 import java.beans.PropertyChangeListener
 import kotlin.time.Duration.Companion.milliseconds
 
-private fun screenBoundsForWindow(window: Window): Rectangle {
+private fun screenBoundsForWindow(window: AwtWindow): Rectangle {
     val screenDevices = GraphicsEnvironment.getLocalGraphicsEnvironment().screenDevices
     val fallbackDevice = window.graphicsConfiguration?.device ?: GraphicsEnvironment
         .getLocalGraphicsEnvironment()
@@ -79,7 +78,7 @@ private fun distanceSquaredToBounds(point: Point, bounds: Rectangle): Long {
     return dx * dx + dy * dy
 }
 
-private fun clampWindowToBounds(window: Window, bounds: Rectangle) {
+private fun clampWindowToBounds(window: AwtWindow, bounds: Rectangle) {
     val width = window.width.coerceAtMost(bounds.width).coerceAtLeast(1)
     val height = window.height.coerceAtMost(bounds.height).coerceAtLeast(1)
     val maxX = bounds.x + bounds.width - width
@@ -93,7 +92,6 @@ private fun clampWindowToBounds(window: Window, bounds: Rectangle) {
 }
 
 fun main() = application {
-    // Set to false to use system default titlebar
     val useCustomTitlebar = false
 
     var showSplash by remember { mutableStateOf(true) }
