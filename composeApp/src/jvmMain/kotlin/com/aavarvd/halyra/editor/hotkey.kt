@@ -8,104 +8,43 @@ fun AppHotkeys(
     event: KeyEvent,
     text: TextFieldValue,
     onTextChange: (TextFieldValue) -> Unit,
-    onSave: () -> Unit,
-    onRun: () -> Unit,
-    onNew: () -> Unit,
-    onOpen: () -> Unit
+    onSave: ()                     -> Unit,
+    onRun: ()                      -> Unit,
+    onNew: ()                      -> Unit,
+    onOpen: ()                     -> Unit,
+    onFind: ()                     -> Unit,
+    onFindReplace: ()              -> Unit,
 ): Boolean {
-    if (
-        event.type == KeyEventType.KeyDown &&
-        event.key == Key.Backspace
-    ) {
-        val selectionStart = minOf(text.selection.start, text.selection.end)
-        val selectionEnd = maxOf(text.selection.start, text.selection.end)
+    if (event.type != KeyEventType.KeyDown) return false
+    val ctrlOnly = event.isCtrlPressed && !event.isAltPressed && !event.isShiftPressed
 
-        if (selectionStart != selectionEnd) {
-            onTextChange(
-                TextFieldValue(
-                    text.text.removeRange(selectionStart, selectionEnd),
-                    selection = TextRange(selectionStart)
-                )
-            )
-            return true
+    return when {
+        ctrlOnly -> when (event.key) {
+            Key.S -> { onSave();        true }
+            Key.O -> { onOpen();        true }
+            Key.F -> { onFind();        true }
+            Key.H -> { onFindReplace(); true }
+            Key.N -> { onNew();         true }
+            else -> false
         }
-
-        if (selectionStart > 0) {
-            val beforeCursor = text.text.substring(0, selectionStart)
-            val afterCursor = text.text.substring(selectionEnd)
-            val lastChunk = beforeCursor.takeLast(4)
-            val deleteCount = if (lastChunk.all { it == ' ' }) lastChunk.length else 1
-            val newCursor = selectionStart - deleteCount
-
-            onTextChange(
-                TextFieldValue(
-                    text = beforeCursor.dropLast(deleteCount) + afterCursor,
-                    selection = TextRange(newCursor)
-                )
-            )
+        event.key == Key.Tab -> {
+            onTextChange(if (event.isShiftPressed) dedentSelection(text) else indentSelection(text))
+            true
         }
+        event.key == Key.F5 -> { onRun(); true }
+        event.key == Key.Backspace -> {
+            val selectionStart = minOf(text.selection.start, text.selection.end)
+            val selectionEnd = maxOf(text.selection.start, text.selection.end)
 
-        return true
+            if (selectionStart != selectionEnd) onTextChange(TextFieldValue(text.text.removeRange(selectionStart, selectionEnd), TextRange(selectionStart)))
+            else
+                if (selectionStart > 0) {
+                    val lastChunk = text.text.substring(0, selectionStart).takeLast(4)
+                    val deleteCount = if (lastChunk.length == 4 && lastChunk.all { it == ' ' }) 4 else 1
+                    onTextChange(TextFieldValue(text.text.removeRange(selectionStart - deleteCount, selectionStart), TextRange(selectionStart - deleteCount)))
+                }
+                true
+        }
+        else -> false
     }
-
-    if (
-        event.type == KeyEventType.KeyDown &&
-        event.key == Key.Tab &&
-        event.isShiftPressed
-    ) {
-        onTextChange(dedentSelection(text))
-        return true
-    }
-
-    if (
-        event.type == KeyEventType.KeyDown &&
-        event.isCtrlPressed &&
-        !event.isAltPressed &&
-        !event.isShiftPressed &&
-        event.key == Key.S
-    ) {
-        onSave()
-        return true
-    }
-
-    if (
-        event.type == KeyEventType.KeyDown &&
-        event.isCtrlPressed &&
-        !event.isAltPressed &&
-        !event.isShiftPressed &&
-        event.key == Key.O
-    ) {
-        onOpen()
-        return true
-    }
-
-    if (
-        event.type == KeyEventType.KeyDown &&
-        event.key == Key.F5
-    ) {
-        onRun()
-        return true
-    }
-
-    if (
-        event.type == KeyEventType.KeyDown &&
-        event.isCtrlPressed &&
-        !event.isAltPressed &&
-        !event.isShiftPressed &&
-        event.key == Key.N
-    ) {
-        onNew()
-        return true
-    }
-
-    if (
-        event.type == KeyEventType.KeyDown &&
-        event.key == Key.Tab &&
-        !event.isShiftPressed
-    ) {
-        onTextChange(indentSelection(text))
-        return true
-    }
-
-    return false
 }

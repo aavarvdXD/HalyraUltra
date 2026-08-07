@@ -9,11 +9,13 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.selection.LocalTextSelectionColors
 import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.foundation.verticalScroll
+
 import androidx.compose.material.*
+
 import androidx.compose.runtime.*
+
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.onPreviewKeyEvent
@@ -27,18 +29,26 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.window.WindowScope
 import androidx.compose.ui.window.WindowState
+
 import com.aavarvd.halyra.editor.AppHotkeys
 import com.aavarvd.halyra.editor.PythonHighLightTransformation
+
 import com.aavarvd.halyra.io.openFile
 import com.aavarvd.halyra.io.runPython
 import com.aavarvd.halyra.io.saveFile
 import com.aavarvd.halyra.io.saveFileAs
+
 import com.aavarvd.halyra.ui.AppButton
 import com.aavarvd.halyra.ui.AppFonts
 import com.aavarvd.halyra.ui.AppTitleBar
+
+import com.aavarvd.halyra.editor.search.SearchState
+
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+
 import java.io.File
+
 import kotlin.math.roundToInt
 
 internal fun calculateScrollTargetForCaret(
@@ -66,6 +76,7 @@ fun WindowScope.App(windowState: WindowState, useCustomTitlebar: Boolean) {
     val minTerminalHeightPx = with(density) { 60.dp.toPx() }
     val maxTerminalHeightPx = with(density) { 420.dp.toPx() }
 
+    var searchState by remember { mutableStateOf(SearchState()) }
     var terminalHeightPx by remember { mutableStateOf(with(density) { 160.dp.toPx() }) }
     var currentFile by remember { mutableStateOf<File?>(null) }
     var text by remember { mutableStateOf(TextFieldValue("")) }
@@ -168,6 +179,18 @@ fun WindowScope.App(windowState: WindowState, useCustomTitlebar: Boolean) {
                                     output = ""
                                     text = TextFieldValue(content)
                                 }
+                            },
+                            onFind = {
+                                searchState = searchState.copy(
+                                    visible = true,
+                                    replaceMode = false
+                                )
+                            },
+                            onFindReplace = {
+                                searchState = searchState.copy(
+                                    visible = true,
+                                    replaceMode = true
+                                )
                             }
                         )
                     }
