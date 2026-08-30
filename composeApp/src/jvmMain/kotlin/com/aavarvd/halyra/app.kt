@@ -43,6 +43,7 @@ import com.aavarvd.halyra.ui.AppFonts
 import com.aavarvd.halyra.ui.AppTitleBar
 
 import com.aavarvd.halyra.editor.search.SearchState
+import com.aavarvd.halyra.editor.search.FindBar
 
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -64,7 +65,8 @@ internal fun calculateScrollTargetForCaret(
 
     return when {
         caretTopPx < currentScroll -> caretTopPx
-        caretBottomPx > currentScroll + viewportHeight -> caretBottomPx - viewportHeight
+        caretBottomPx > currentScroll + viewportHeight ->
+            caretBottomPx - viewportHeight
         else -> null
     }
 }
@@ -77,22 +79,29 @@ fun WindowScope.App(windowState: WindowState, useCustomTitlebar: Boolean) {
     val maxTerminalHeightPx = with(density) { 420.dp.toPx() }
 
     var searchState by remember { mutableStateOf(SearchState()) }
-    var terminalHeightPx by remember { mutableStateOf(with(density) { 160.dp.toPx() }) }
+    var terminalHeightPx by remember {
+        mutableStateOf(with(density) { 160.dp.toPx() })
+    }
     var currentFile by remember { mutableStateOf<File?>(null) }
     var text by remember { mutableStateOf(TextFieldValue("")) }
     var output by remember { mutableStateOf("") }
     var pythonRunJob by remember { mutableStateOf<Job?>(null) }
     var editorViewportHeightPx by remember { mutableStateOf(0) }
     var editorTextLayout by remember { mutableStateOf<TextLayoutResult?>(null) }
+
     val editorScrollState = rememberScrollState()
     val editorVerticalPadding = 8.dp
-    val editorVerticalPaddingPx = with(density) { editorVerticalPadding.toPx() }
+    val editorVerticalPaddingPx = with(density) {
+        editorVerticalPadding.toPx()
+    }
+
     val editorSelectionColors = remember {
         TextSelectionColors(
             handleColor = Color(0xFF4EA1FF),
             backgroundColor = Color(0x664EA1FF)
         )
     }
+
     val editorTextStyle = LocalTextStyle.current.copy(
         color = Color(0xFFBBBBBB),
         fontFamily = AppFonts.JBMono,
@@ -118,6 +127,7 @@ fun WindowScope.App(windowState: WindowState, useCustomTitlebar: Boolean) {
 
         val caretOffset = text.selection.end.coerceIn(0, layoutTextLength)
         val cursorRect = layout.getCursorRect(caretOffset)
+
         val scrollTarget = calculateScrollTargetForCaret(
             currentScroll = editorScrollState.value,
             viewportHeight = editorViewportHeightPx,
@@ -126,7 +136,9 @@ fun WindowScope.App(windowState: WindowState, useCustomTitlebar: Boolean) {
         )
 
         if (scrollTarget != null) {
-            editorScrollState.animateScrollTo(scrollTarget.coerceIn(0, editorScrollState.maxValue))
+            editorScrollState.animateScrollTo(
+                scrollTarget.coerceIn(0, editorScrollState.maxValue)
+            )
         }
     }
 
@@ -158,6 +170,7 @@ fun WindowScope.App(windowState: WindowState, useCustomTitlebar: Boolean) {
                             event = event,
                             text = text,
                             onTextChange = { text = it },
+
                             onSave = {
                                 if (currentFile != null) {
                                     saveFile(currentFile!!, text.text)
@@ -165,13 +178,16 @@ fun WindowScope.App(windowState: WindowState, useCustomTitlebar: Boolean) {
                                     currentFile = saveFileAs(text.text)
                                 }
                             },
+
                             onRun = ::runCurrentFile,
+
                             onNew = {
                                 pythonRunJob?.cancel()
                                 currentFile = null
                                 text = TextFieldValue("")
                                 output = ""
                             },
+
                             onOpen = {
                                 openFile()?.let { (file, content) ->
                                     pythonRunJob?.cancel()
@@ -180,12 +196,14 @@ fun WindowScope.App(windowState: WindowState, useCustomTitlebar: Boolean) {
                                     text = TextFieldValue(content)
                                 }
                             },
+
                             onFind = {
                                 searchState = searchState.copy(
                                     visible = true,
                                     replaceMode = false
                                 )
                             },
+
                             onFindReplace = {
                                 searchState = searchState.copy(
                                     visible = true,
@@ -196,6 +214,11 @@ fun WindowScope.App(windowState: WindowState, useCustomTitlebar: Boolean) {
                     }
                     .focusable()
             ) {
+
+                // =========================
+                // Toolbar
+                // =========================
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -229,7 +252,9 @@ fun WindowScope.App(windowState: WindowState, useCustomTitlebar: Boolean) {
                     Spacer(Modifier.width(8.dp))
 
                     AppButton("Save As") {
-                        saveFileAs(text.text)?.let { currentFile = it }
+                        saveFileAs(text.text)?.let {
+                            currentFile = it
+                        }
                     }
 
                     Spacer(Modifier.width(8.dp))
@@ -241,94 +266,149 @@ fun WindowScope.App(windowState: WindowState, useCustomTitlebar: Boolean) {
                     )
                 }
 
-                Row(
+                Column(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth()
                         .background(Color(0xFF2B2B2B))
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .width(48.dp)
-                            .fillMaxHeight()
-                            .background(Color(0xFF252525))
-                            .padding(top = 8.dp, end = 8.dp)
-                            .verticalScroll(editorScrollState),
-                        horizontalAlignment = Alignment.End
-                    ) {
-                        for (i in 1..lineCount) {
-                            Text(
-                                text = i.toString(),
-                                color = Color(0xFF666666),
-                                style = editorTextStyle.copy(
-                                    color = Color(0xFF666666),
-                                    textAlign = TextAlign.End
+
+                    // Find / Replace bar
+                    if (searchState.visible) {
+                        FindBar(
+                            query = searchState.query,
+
+                            onQueryChange = { query ->
+                                searchState = searchState.copy(
+                                    query = query
                                 )
-                            )
-                        }
+                            },
+
+                            onClose = {
+                                searchState = SearchState()
+                            }
+                        )
                     }
 
-                    CompositionLocalProvider(LocalTextSelectionColors provides editorSelectionColors) {
-                        BasicTextField(
-                            value = text,
-                            onValueChange = { newValue ->
-                                val oldText = text.text
-                                val newText = newValue.text
-                                val newSelection = newValue.selection
+                    // Actual editor
+                    Row(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                    ) {
 
-                                val insertedNewLine =
-                                    newText.length == oldText.length + 1 &&
-                                        newSelection.start > 0 &&
-                                        newText[newSelection.start - 1] == '\n'
-
-                                if (insertedNewLine) {
-                                    val cursor = newSelection.start
-                                    val beforeCursor = newText.substring(0, cursor)
-                                    val lines = beforeCursor.split('\n')
-
-                                    if (lines.size >= 2) {
-                                        val previousLine = lines[lines.size - 2]
-                                        val baseIndent = previousLine.takeWhile {
-                                            it == ' ' || it == '\t'
-                                        }
-                                        val extraIndent = if (previousLine.trimEnd().endsWith(":")) {
-                                            "    "
-                                        } else {
-                                            ""
-                                        }
-                                        val indent = baseIndent + extraIndent
-                                        val finalText = newText.substring(0, cursor) +
-                                            indent +
-                                            newText.substring(cursor)
-
-                                        text = TextFieldValue(
-                                            finalText,
-                                            selection = TextRange(cursor + indent.length)
-                                        )
-                                        return@BasicTextField
-                                    }
-                                }
-
-                                text = newValue
-                            },
+                        // Gutter
+                        Column(
                             modifier = Modifier
-                                .weight(1f)
+                                .width(48.dp)
                                 .fillMaxHeight()
-                                .background(Color(0xFF2B2B2B))
-                                .onSizeChanged { editorViewportHeightPx = it.height }
-                                .verticalScroll(editorScrollState)
-                                .padding(
-                                    start = 4.dp,
-                                    top = editorVerticalPadding,
-                                    end = 8.dp,
-                                    bottom = editorVerticalPadding
-                                ),
-                            textStyle = editorTextStyle,
-                            cursorBrush = SolidColor(Color.White),
-                            visualTransformation = PythonHighLightTransformation(),
-                            onTextLayout = { editorTextLayout = it },
-                            singleLine = false,
-                        )
+                                .background(Color(0xFF252525))
+                                .padding(top = 8.dp, end = 8.dp)
+                                .verticalScroll(editorScrollState),
+                            horizontalAlignment = Alignment.End
+                        ) {
+                            for (i in 1..lineCount) {
+                                Text(
+                                    text = i.toString(),
+                                    color = Color(0xFF666666),
+                                    style = editorTextStyle.copy(
+                                        color = Color(0xFF666666),
+                                        textAlign = TextAlign.End
+                                    )
+                                )
+                            }
+                        }
+
+                        // Text editor
+                        CompositionLocalProvider(
+                            LocalTextSelectionColors provides editorSelectionColors
+                        ) {
+                            BasicTextField(
+                                value = text,
+                                onValueChange = { newValue ->
+                                    val oldText = text.text
+                                    val newText = newValue.text
+                                    val newSelection = newValue.selection
+
+                                    val insertedNewLine =
+                                        newText.length == oldText.length + 1 &&
+                                                newSelection.start > 0 &&
+                                                newText[newSelection.start - 1] == '\n'
+
+                                    if (insertedNewLine) {
+                                        val cursor = newSelection.start
+                                        val beforeCursor =
+                                            newText.substring(0, cursor)
+
+                                        val lines = beforeCursor.split('\n')
+
+                                        if (lines.size >= 2) {
+                                            val previousLine =
+                                                lines[lines.size - 2]
+
+                                            val baseIndent =
+                                                previousLine.takeWhile {
+                                                    it == ' ' || it == '\t'
+                                                }
+
+                                            val extraIndent =
+                                                if (previousLine.trimEnd().endsWith(":")) {
+                                                    "    "
+                                                } else {
+                                                    ""
+                                                }
+
+                                            val indent =
+                                                baseIndent + extraIndent
+
+                                            val finalText =
+                                                newText.substring(0, cursor) +
+                                                        indent +
+                                                        newText.substring(cursor)
+
+                                            text = TextFieldValue(
+                                                finalText,
+                                                selection = TextRange(
+                                                    cursor + indent.length
+                                                )
+                                            )
+
+                                            return@BasicTextField
+                                        }
+                                    }
+
+                                    text = newValue
+                                },
+
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight()
+                                    .background(Color(0xFF2B2B2B))
+                                    .onSizeChanged {
+                                        editorViewportHeightPx = it.height
+                                    }
+                                    .verticalScroll(editorScrollState)
+                                    .padding(
+                                        start = 4.dp,
+                                        top = editorVerticalPadding,
+                                        end = 8.dp,
+                                        bottom = editorVerticalPadding
+                                    ),
+
+                                textStyle = editorTextStyle,
+
+                                cursorBrush = SolidColor(Color.White),
+
+                                visualTransformation =
+                                    PythonHighLightTransformation(),
+
+                                onTextLayout = {
+                                    editorTextLayout = it
+                                },
+
+                                singleLine = false,
+                            )
+                        }
                     }
                 }
 
@@ -340,8 +420,13 @@ fun WindowScope.App(windowState: WindowState, useCustomTitlebar: Boolean) {
                         .pointerInput(Unit) {
                             detectDragGestures { change, dragAmount ->
                                 change.consume()
-                                terminalHeightPx = (terminalHeightPx - dragAmount.y)
-                                    .coerceIn(minTerminalHeightPx, maxTerminalHeightPx)
+
+                                terminalHeightPx =
+                                    (terminalHeightPx - dragAmount.y)
+                                        .coerceIn(
+                                            minTerminalHeightPx,
+                                            maxTerminalHeightPx
+                                        )
                             }
                         }
                 )
@@ -350,7 +435,11 @@ fun WindowScope.App(windowState: WindowState, useCustomTitlebar: Boolean) {
                     text = output,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(with(density) { terminalHeightPx.toDp() })
+                        .height(
+                            with(density) {
+                                terminalHeightPx.toDp()
+                            }
+                        )
                         .background(Color.Black)
                         .padding(8.dp),
                     color = Color(0xFFCCCCCC),
