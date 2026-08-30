@@ -330,6 +330,33 @@ fun WindowScope.App(windowState: WindowState, useCustomTitlebar: Boolean) {
                                     val newText = newValue.text
                                     val newSelection = newValue.selection
 
+                                    // Handle auto-closing brackets
+                                    if (newText.length == oldText.length + 1 && newSelection.collapsed) {
+                                        val cursor = newSelection.start
+                                        val insertedChar = if (cursor > 0) newText[cursor - 1] else null
+                                        
+                                        val closingChar = when (insertedChar) {
+                                            '(' -> ')'
+                                            '[' -> ']'
+                                            '{' -> '}'
+                                            '"' -> '"'
+                                            '\'' -> '\''
+                                            else -> null
+                                        }
+                                        
+                                        if (closingChar != null) {
+                                            val finalText = newText.substring(0, cursor) + 
+                                                          closingChar + 
+                                                          newText.substring(cursor)
+                                            
+                                            text = TextFieldValue(
+                                                finalText,
+                                                selection = TextRange(cursor)
+                                            )
+                                            return@BasicTextField
+                                        }
+                                    }
+
                                     val insertedNewLine =
                                         newText.length == oldText.length + 1 &&
                                                 newSelection.start > 0 &&
