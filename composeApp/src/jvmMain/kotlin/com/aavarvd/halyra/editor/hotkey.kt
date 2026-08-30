@@ -8,12 +8,12 @@ fun AppHotkeys(
     event: KeyEvent,
     text: TextFieldValue,
     onTextChange: (TextFieldValue) -> Unit,
-    onSave: ()                     -> Unit,
-    onRun: ()                      -> Unit,
-    onNew: ()                      -> Unit,
-    onOpen: ()                     -> Unit,
-    onFind: ()                     -> Unit,
-    onFindReplace: ()              -> Unit,
+    onSave: () -> Unit,
+    onRun: () -> Unit,
+    onNew: () -> Unit,
+    onOpen: () -> Unit,
+    onFind: () -> Unit,
+    onFindReplace: () -> Unit,
 ): Boolean {
     if (event.type != KeyEventType.KeyDown) return false
     val ctrlOnly = event.isCtrlPressed && !event.isAltPressed && !event.isShiftPressed

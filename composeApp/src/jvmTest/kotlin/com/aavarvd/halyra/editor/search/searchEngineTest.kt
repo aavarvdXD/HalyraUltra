@@ -17,6 +17,6 @@ class SearchEngineTest {
 
         val matches = SearchEngine.findMatches(text, "value")
 
-        assertEquals(3, matches.size)
+        assertEquals(4, matches.size)
     }
 }

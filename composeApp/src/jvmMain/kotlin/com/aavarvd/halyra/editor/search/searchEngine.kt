@@ -16,11 +16,7 @@ object SearchEngine {
             else
                 text.lowercase()
 
-        val target =
-            if (options.caseSensitive)
-                query
-            else
-                query.lowercase()
+        val target = if (options.caseSensitive) query else query.lowercase()
 
         val results = mutableListOf<SearchMatch>()
 
