@@ -55,10 +55,11 @@ fun FindBar(
                 text = "Find:",
                 color = Color(0xFFBBBBBB),
                 fontFamily = AppFonts.Inter,
-                modifier = Modifier.width(60.dp)
+                fontSize = 12.sp,
+                modifier = Modifier.width(50.dp)
             )
 
-            Spacer(Modifier.width(8.dp))
+            Spacer(Modifier.width(4.dp))
 
             BasicTextField(
                 value = query,
@@ -66,60 +67,88 @@ fun FindBar(
                 singleLine = true,
                 textStyle = LocalTextStyle.current.copy(
                     color = Color.White,
-                    fontSize = 14.sp,
+                    fontSize = 12.sp,
                     fontFamily = AppFonts.JBMono
                 ),
+                cursorBrush = androidx.compose.ui.graphics.SolidColor(Color.White),
                 modifier = Modifier
-                    .width(300.dp)
+                    .width(200.dp)
                     .clip(RoundedCornerShape(4.dp))
                     .background(Color(0xFF2B2B2B))
                     .focusRequester(queryFocusRequester)
-                    .padding(horizontal = 8.dp, vertical = 6.dp)
+                    .padding(horizontal = 6.dp, vertical = 4.dp)
                     .onPreviewKeyEvent { event ->
-                        if (event.type == KeyEventType.KeyDown) {
-                            when {
-                                event.key == Key.Enter && event.isShiftPressed -> {
-                                    onPrevious()
-                                    true
-                                }
-                                event.key == Key.Enter -> {
-                                    onNext()
-                                    true
-                                }
-                                event.key == Key.Escape -> {
-                                    onClose()
-                                    true
-                                }
-                                event.key == Key.Tab && replaceMode -> {
-                                    replaceFocusRequester.requestFocus()
-                                    true
-                                }
-                                else -> false
+                        when {
+                            event.type == KeyEventType.KeyDown && event.key == Key.Enter && event.isShiftPressed -> {
+                                onPrevious()
+                                true
                             }
-                        } else false
+                            event.type == KeyEventType.KeyDown && event.key == Key.Enter -> {
+                                onNext()
+                                true
+                            }
+                            event.type == KeyEventType.KeyDown && event.key == Key.Escape -> {
+                                onClose()
+                                true
+                            }
+                            event.type == KeyEventType.KeyDown && event.key == Key.Tab && replaceMode -> {
+                                replaceFocusRequester.requestFocus()
+                                true
+                            }
+                            event.type == KeyEventType.KeyDown && event.key == Key.Backspace -> {
+                                // Handle backspace within the field, don't propagate
+                                false
+                            }
+                            else -> false
+                        }
                     }
             )
 
-            Spacer(Modifier.width(8.dp))
+            Spacer(Modifier.width(4.dp))
 
-            TextButton(onClick = onPrevious) {
-                Text("↑", color = Color(0xFFBBBBBB))
+            TextButton(
+                onClick = onPrevious,
+                modifier = Modifier.padding(0.dp)
+            ) {
+                Text("↑", color = Color(0xFFBBBBBB), fontSize = 12.sp)
             }
 
-            TextButton(onClick = onNext) {
-                Text("↓", color = Color(0xFFBBBBBB))
+            TextButton(
+                onClick = onNext,
+                modifier = Modifier.padding(0.dp)
+            ) {
+                Text("↓", color = Color(0xFFBBBBBB), fontSize = 12.sp)
             }
 
-            Spacer(Modifier.width(8.dp))
+            if (replaceMode) {
+                TextButton(
+                    onClick = onReplace,
+                    modifier = Modifier.padding(0.dp)
+                ) {
+                    Text("Replace", color = Color(0xFFBBBBBB), fontSize = 10.sp)
+                }
 
-            TextButton(onClick = onClose) {
-                Text("Close", color = Color(0xFFBBBBBB))
+                TextButton(
+                    onClick = onReplaceAll,
+                    modifier = Modifier.padding(0.dp)
+                ) {
+                    Text("All", color = Color(0xFFBBBBBB), fontSize = 10.sp)
+                }
+            }
+
+            Spacer(Modifier.weight(1f))
+
+            TextButton(
+                onClick = onClose,
+                modifier = Modifier.padding(0.dp)
+            ) {
+                Text("✕", color = Color(0xFFBBBBBB), fontSize = 12.sp)
             }
         }
 
         // Replace row (only shown in replace mode)
         if (replaceMode) {
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(4.dp))
             
             Row(
                 verticalAlignment = Alignment.CenterVertically
@@ -128,10 +157,11 @@ fun FindBar(
                     text = "Replace:",
                     color = Color(0xFFBBBBBB),
                     fontFamily = AppFonts.Inter,
-                    modifier = Modifier.width(60.dp)
+                    fontSize = 12.sp,
+                    modifier = Modifier.width(50.dp)
                 )
 
-                Spacer(Modifier.width(8.dp))
+                Spacer(Modifier.width(4.dp))
 
                 BasicTextField(
                     value = replaceText,
@@ -139,45 +169,38 @@ fun FindBar(
                     singleLine = true,
                     textStyle = LocalTextStyle.current.copy(
                         color = Color.White,
-                        fontSize = 14.sp,
+                        fontSize = 12.sp,
                         fontFamily = AppFonts.JBMono
                     ),
+                    cursorBrush = androidx.compose.ui.graphics.SolidColor(Color.White),
                     modifier = Modifier
-                        .width(300.dp)
+                        .width(200.dp)
                         .clip(RoundedCornerShape(4.dp))
                         .background(Color(0xFF2B2B2B))
                         .focusRequester(replaceFocusRequester)
-                        .padding(horizontal = 8.dp, vertical = 6.dp)
+                        .padding(horizontal = 6.dp, vertical = 4.dp)
                         .onPreviewKeyEvent { event ->
-                            if (event.type == KeyEventType.KeyDown) {
-                                when {
-                                    event.key == Key.Enter && event.isCtrlPressed -> {
-                                        onReplaceAll()
-                                        true
-                                    }
-                                    event.key == Key.Enter -> {
-                                        onReplace()
-                                        true
-                                    }
-                                    event.key == Key.Escape -> {
-                                        onClose()
-                                        true
-                                    }
-                                    else -> false
+                            when {
+                                event.type == KeyEventType.KeyDown && event.key == Key.Enter && event.isCtrlPressed -> {
+                                    onReplaceAll()
+                                    true
                                 }
-                            } else false
+                                event.type == KeyEventType.KeyDown && event.key == Key.Enter -> {
+                                    onReplace()
+                                    true
+                                }
+                                event.type == KeyEventType.KeyDown && event.key == Key.Escape -> {
+                                    onClose()
+                                    true
+                                }
+                                event.type == KeyEventType.KeyDown && event.key == Key.Backspace -> {
+                                    // Handle backspace within the field, don't propagate
+                                    false
+                                }
+                                else -> false
+                            }
                         }
                 )
-
-                Spacer(Modifier.width(8.dp))
-
-                TextButton(onClick = onReplace) {
-                    Text("Replace", color = Color(0xFFBBBBBB))
-                }
-
-                TextButton(onClick = onReplaceAll) {
-                    Text("Replace All", color = Color(0xFFBBBBBB))
-                }
             }
         }
     }
