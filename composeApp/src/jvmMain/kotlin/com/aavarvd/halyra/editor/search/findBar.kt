@@ -77,7 +77,7 @@ fun FindBar(
                     .background(Color(0xFF2B2B2B))
                     .focusRequester(queryFocusRequester)
                     .padding(horizontal = 6.dp, vertical = 4.dp)
-                    .onPreviewKeyEvent { event ->
+                    .onKeyEvent { event ->
                         when {
                             event.type == KeyEventType.KeyDown && event.key == Key.Enter && event.isShiftPressed -> {
                                 onPrevious()
@@ -94,10 +94,6 @@ fun FindBar(
                             event.type == KeyEventType.KeyDown && event.key == Key.Tab && replaceMode -> {
                                 replaceFocusRequester.requestFocus()
                                 true
-                            }
-                            event.type == KeyEventType.KeyDown && event.key == Key.Backspace -> {
-                                // Handle backspace within the field, don't propagate
-                                false
                             }
                             else -> false
                         }
@@ -179,7 +175,7 @@ fun FindBar(
                         .background(Color(0xFF2B2B2B))
                         .focusRequester(replaceFocusRequester)
                         .padding(horizontal = 6.dp, vertical = 4.dp)
-                        .onPreviewKeyEvent { event ->
+                        .onKeyEvent { event ->
                             when {
                                 event.type == KeyEventType.KeyDown && event.key == Key.Enter && event.isCtrlPressed -> {
                                     onReplaceAll()
@@ -192,10 +188,6 @@ fun FindBar(
                                 event.type == KeyEventType.KeyDown && event.key == Key.Escape -> {
                                     onClose()
                                     true
-                                }
-                                event.type == KeyEventType.KeyDown && event.key == Key.Backspace -> {
-                                    // Handle backspace within the field, don't propagate
-                                    false
                                 }
                                 else -> false
                             }

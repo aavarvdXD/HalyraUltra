@@ -198,17 +198,25 @@ fun WindowScope.App(windowState: WindowState, useCustomTitlebar: Boolean) {
                             },
 
                             onFind = {
-                                searchState = searchState.copy(
-                                    visible = true,
-                                    replaceMode = false
-                                )
+                                if (searchState.visible && !searchState.replaceMode) {
+                                    searchState = SearchState()
+                                } else {
+                                    searchState = searchState.copy(
+                                        visible = true,
+                                        replaceMode = false
+                                    )
+                                }
                             },
 
                             onFindReplace = {
-                                searchState = searchState.copy(
-                                    visible = true,
-                                    replaceMode = true
-                                )
+                                if (searchState.visible && searchState.replaceMode) {
+                                    searchState = SearchState()
+                                } else {
+                                    searchState = searchState.copy(
+                                        visible = true,
+                                        replaceMode = true
+                                    )
+                                }
                             }
                         )
                     }
