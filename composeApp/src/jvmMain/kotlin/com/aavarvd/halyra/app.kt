@@ -277,6 +277,8 @@ fun WindowScope.App(windowState: WindowState, useCustomTitlebar: Boolean) {
                     if (searchState.visible) {
                         FindBar(
                             query = searchState.query,
+                            replaceMode = searchState.replaceMode,
+                            replaceText = searchState.replaceText,
 
                             onQueryChange = { query ->
                                 searchState = searchState.copy(
@@ -284,8 +286,30 @@ fun WindowScope.App(windowState: WindowState, useCustomTitlebar: Boolean) {
                                 )
                             },
 
+                            onReplaceTextChange = { replaceText ->
+                                searchState = searchState.copy(
+                                    replaceText = replaceText
+                                )
+                            },
+
                             onClose = {
                                 searchState = SearchState()
+                            },
+
+                            onNext = {
+                                // TODO: Navigate to next match
+                            },
+
+                            onPrevious = {
+                                // TODO: Navigate to previous match
+                            },
+
+                            onReplace = {
+                                // TODO: Replace current match
+                            },
+
+                            onReplaceAll = {
+                                // TODO: Replace all matches
                             }
                         )
                     }
