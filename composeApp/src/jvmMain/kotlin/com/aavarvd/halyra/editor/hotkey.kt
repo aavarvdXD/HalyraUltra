@@ -32,19 +32,6 @@ fun AppHotkeys(
             true
         }
         event.key == Key.F5 -> { onRun(); true }
-        event.key == Key.Backspace -> {
-            val selectionStart = minOf(text.selection.start, text.selection.end)
-            val selectionEnd = maxOf(text.selection.start, text.selection.end)
-
-            if (selectionStart != selectionEnd) onTextChange(TextFieldValue(text.text.removeRange(selectionStart, selectionEnd), TextRange(selectionStart)))
-            else
-                if (selectionStart > 0) {
-                    val lastChunk = text.text.substring(0, selectionStart).takeLast(4)
-                    val deleteCount = if (lastChunk.length == 4 && lastChunk.all { it == ' ' }) 4 else 1
-                    onTextChange(TextFieldValue(text.text.removeRange(selectionStart - deleteCount, selectionStart), TextRange(selectionStart - deleteCount)))
-                }
-                true
-        }
         else -> false
     }
 }
