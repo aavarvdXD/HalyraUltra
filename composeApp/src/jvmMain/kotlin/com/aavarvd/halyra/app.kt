@@ -465,7 +465,7 @@ fun WindowScope.App(windowState: WindowState, useCustomTitlebar: Boolean) {
                                                 )
                                             } else if (selectionStart > 0) {
                                                 val lastChunk = text.text.substring(0, selectionStart).takeLast(4)
-                                                val deleteCount = 
+                                                val deleteCount =
                                                     if (lastChunk.length == 4 && lastChunk.all { it == ' ' }) 4
                                                     else 1
                                                 text = TextFieldValue(
