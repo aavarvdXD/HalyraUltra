@@ -119,8 +119,10 @@ fun main() = application {
     } else {
         val mainWindowState = rememberWindowState(placement = WindowPlacement.Maximized)
 
+        var isAskingToClose by remember { mutableStateOf(false) }
+
         Window(
-            onCloseRequest = ::exitApplication,
+            onCloseRequest = { isAskingToClose = true },
             title = "Halyra",
             icon = painterResource("images/icon.png"),
             state = mainWindowState,
@@ -158,7 +160,26 @@ fun main() = application {
                     }
                 }
             }
-            App(mainWindowState, useCustomTitlebar)
+
+            var triggerClose by remember { mutableStateOf(false) }
+
+            if (triggerClose) {
+                SideEffect {
+                    exitApplication()
+                }
+            }
+
+            App(
+                windowState = mainWindowState,
+                useCustomTitlebar = useCustomTitlebar,
+                closeRequested = isAskingToClose,
+                onCloseRequest = { triggerClose = true },
+                onCloseCancelled = { isAskingToClose = false }
+            )
+
+            if (isAskingToClose && !triggerClose) {
+                // Handled via onCloseCancelled callback
+            }
         }
     }
 }

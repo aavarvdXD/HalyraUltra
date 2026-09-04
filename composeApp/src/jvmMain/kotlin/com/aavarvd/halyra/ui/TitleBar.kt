@@ -24,7 +24,10 @@ import androidx.compose.ui.window.WindowScope
 import kotlin.system.exitProcess
 
 @Composable
-fun WindowScope.AppTitleBar(windowState: WindowState) {
+fun WindowScope.AppTitleBar(
+    windowState: WindowState,
+    onClose: () -> Unit
+) {
     val isMaximized = windowState.placement == WindowPlacement.Maximized
 
     Box(
@@ -65,7 +68,7 @@ fun WindowScope.AppTitleBar(windowState: WindowState) {
             }
 
             TitleBarButton("✕") {
-                exitProcess(0)
+                onClose()
             }
         }
     }
