@@ -94,7 +94,8 @@ fun Sidebar(
     onNew: () -> Unit,
     onOpen: () -> Unit,
     onRun: () -> Unit,
-    onSave: () -> Unit
+    onSave: () -> Unit,
+    onToggleShell: () -> Unit
 ) {
     val newIcon = remember {
         loadIcon("new.png")
@@ -110,6 +111,10 @@ fun Sidebar(
 
     val saveIcon = remember {
         loadIcon("save.png")
+    }
+
+    val shellIcon = remember {
+        loadIcon("shell.png")
     }
 
     Column(
@@ -157,6 +162,16 @@ fun Sidebar(
             icon = saveIcon,
             hint = "Save File",
             onClick = onSave
+        )
+
+        Spacer(
+            modifier = Modifier.height(4.dp)
+        )
+
+        SidebarButton(
+            icon = shellIcon,
+            hint = "Toggle Shell",
+            onClick = onToggleShell
         )
     }
 }

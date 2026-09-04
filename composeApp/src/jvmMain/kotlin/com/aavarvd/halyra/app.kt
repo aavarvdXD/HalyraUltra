@@ -110,6 +110,8 @@ fun WindowScope.App(
     var pythonRunJob by remember { mutableStateOf<Job?>(null) }
     var pythonProcess by remember { mutableStateOf<PythonProcess?>(null) }
 
+    var shellVisible by remember { mutableStateOf(true) }
+
     var showExitConfirmation by remember { mutableStateOf(false) }
 
     val isModified = remember(text.text, lastSavedText, currentFile) {
@@ -371,8 +373,12 @@ fun WindowScope.App(
                 Sidebar(
                     onNew = { newFile() },
                     onOpen = { openFileFromDialog() },
-                    onRun = { runCurrentFile() },
-                    onSave = { saveCurrentFile() }
+                    onRun = { 
+                        runCurrentFile() 
+                        shellVisible = true
+                    },
+                    onSave = { saveCurrentFile() },
+                    onToggleShell = { shellVisible = !shellVisible }
                 )
 
                 Column(
@@ -504,6 +510,17 @@ fun WindowScope.App(
                                         if (
                                             closingChar != null
                                         ) {
+                                            // Handle typing over auto-closed quotes
+                                            if ((insertedChar == '"' || insertedChar == '\'') &&
+                                                cursor <= oldText.length && 
+                                                oldText.getOrNull(cursor - 1) == insertedChar) {
+                                                text = TextFieldValue(
+                                                    oldText,
+                                                    selection = TextRange(cursor)
+                                                )
+                                                return@BasicTextField
+                                            }
+
                                             val finalText =
                                                 newText.substring(
                                                     0,
@@ -523,6 +540,19 @@ fun WindowScope.App(
                                                         )
                                                 )
 
+                                            return@BasicTextField
+                                        }
+
+                                        // Handle typing over auto-closed brackets
+                                        if (
+                                            (insertedChar == ')' || insertedChar == ']' || insertedChar == '}') &&
+                                            cursor <= oldText.length && 
+                                            oldText.getOrNull(cursor - 1) == insertedChar
+                                        ) {
+                                            text = TextFieldValue(
+                                                oldText,
+                                                selection = TextRange(cursor)
+                                            )
                                             return@BasicTextField
                                         }
                                     }
@@ -727,95 +757,97 @@ fun WindowScope.App(
                         }
                     }
 
-                    Spacer(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(5.dp)
-                            .background(
-                                Color(0xFF3C3F41)
-                            )
-                            .pointerHoverIcon(
-                                PointerIcon(
-                                    Cursor.getPredefinedCursor(
-                                        Cursor.N_RESIZE_CURSOR
+                    if (shellVisible) {
+                        Spacer(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(5.dp)
+                                .background(
+                                    Color(0xFF3C3F41)
+                                )
+                                .pointerHoverIcon(
+                                    PointerIcon(
+                                        Cursor.getPredefinedCursor(
+                                            Cursor.N_RESIZE_CURSOR
+                                        )
                                     )
                                 )
-                            )
-                            .pointerInput(Unit) {
-                                detectDragGestures {
-                                        change,
-                                        dragAmount ->
+                                .pointerInput(Unit) {
+                                    detectDragGestures {
+                                            change,
+                                            dragAmount ->
 
-                                    change.consume()
+                                        change.consume()
 
-                                    terminalHeightPx =
-                                        (
-                                                terminalHeightPx -
-                                                        dragAmount.y
-                                                ).coerceIn(
-                                                minTerminalHeightPx,
-                                                maxTerminalHeightPx
-                                            )
+                                        terminalHeightPx =
+                                            (
+                                                    terminalHeightPx -
+                                                            dragAmount.y
+                                                    ).coerceIn(
+                                                    minTerminalHeightPx,
+                                                    maxTerminalHeightPx
+                                                )
+                                    }
                                 }
-                            }
-                    )
-
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(
-                                with(density) {
-                                    terminalHeightPx.toDp()
-                                }
-                            )
-                            .background(Color.Black)
-                            .padding(8.dp)
-                    ) {
-
-                        Text(
-                            text = output,
-
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth()
-                                .verticalScroll(
-                                    rememberScrollState()
-                                ),
-
-                            color =
-                                Color(0xFFCCCCCC),
-
-                            fontFamily =
-                                AppFonts.JBMono
                         )
 
-                        BasicTextField(
-                            value = terminalInput,
-
-                            onValueChange = {
-                                terminalInput = it
-                            },
-
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(top = 4.dp),
+                                .height(
+                                    with(density) {
+                                        terminalHeightPx.toDp()
+                                    }
+                                )
+                                .background(Color.Black)
+                                .padding(8.dp)
+                        ) {
 
-                            textStyle =
-                                LocalTextStyle.current.copy(
-                                    color =
-                                        Color(0xFFCCCCCC),
+                            Text(
+                                text = output,
 
-                                    fontFamily =
-                                        AppFonts.JBMono
-                                ),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxWidth()
+                                    .verticalScroll(
+                                        rememberScrollState()
+                                    ),
 
-                            cursorBrush =
-                                SolidColor(Color.White),
+                                color =
+                                    Color(0xFFCCCCCC),
 
-                            singleLine = true,
+                                fontFamily =
+                                    AppFonts.JBMono
+                            )
 
-                            onTextLayout = {}
-                        )
+                            BasicTextField(
+                                value = terminalInput,
+
+                                onValueChange = {
+                                    terminalInput = it
+                                },
+
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 4.dp),
+
+                                textStyle =
+                                    LocalTextStyle.current.copy(
+                                        color =
+                                            Color(0xFFCCCCCC),
+
+                                        fontFamily =
+                                            AppFonts.JBMono
+                                    ),
+
+                                cursorBrush =
+                                    SolidColor(Color.White),
+
+                                singleLine = true,
+
+                                onTextLayout = {}
+                            )
+                        }
                     }
                 }
             }
