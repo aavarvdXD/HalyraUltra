@@ -15,8 +15,9 @@ fun openFile(): Pair<File, String>? {
     return file to file.readText()
 }
 
-fun saveFileAs(content: String): File? {
+fun saveFileAs(content: String, suggestedName: String = "Untitled.py"): File? {
     val dialog = FileDialog(null as Frame?, "Save File", FileDialog.SAVE)
+    dialog.file = suggestedName
     dialog.isVisible = true
 
     val file = dialog.file ?: return null
