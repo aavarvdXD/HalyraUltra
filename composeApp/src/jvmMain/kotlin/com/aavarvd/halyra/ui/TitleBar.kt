@@ -36,11 +36,8 @@ fun WindowScope.AppTitleBar(
             .height(32.dp)
             .background(Color(0xFF2B2B2B))
     ) {
-        // Only make draggable when not maximized
-        if (!isMaximized) {
-            WindowDraggableArea {
-                Box(modifier = Modifier.fillMaxSize())
-            }
+        WindowDraggableArea {
+            Box(modifier = Modifier.fillMaxSize())
         }
 
         Row(
@@ -56,19 +53,21 @@ fun WindowScope.AppTitleBar(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            TitleBarButton("─") {
-                windowState.isMinimized = true
-            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                TitleBarButton("─") {
+                    windowState.isMinimized = true
+                }
 
-            TitleBarButton(
-                if (windowState.placement == WindowPlacement.Maximized) "❐" else "□"
-            ) {
-                windowState.placement =
-                    if (windowState.placement == WindowPlacement.Maximized) WindowPlacement.Floating else WindowPlacement.Maximized
-            }
+                TitleBarButton(
+                    if (windowState.placement == WindowPlacement.Maximized) "❐" else "□"
+                ) {
+                    windowState.placement =
+                        if (windowState.placement == WindowPlacement.Maximized) WindowPlacement.Floating else WindowPlacement.Maximized
+                }
 
-            TitleBarButton("✕") {
-                onClose()
+                TitleBarButton("✕") {
+                    onClose()
+                }
             }
         }
     }

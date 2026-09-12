@@ -65,7 +65,11 @@ class PyLexer {
         val tokens = mutableListOf<Token>()
 
         var i = 0
+        var iterations = 0
         while (i < code.length) {
+
+            iterations++
+            if (iterations % 5000 == 0) println("iterations=$iterations i=$i len=${code.length}")
             val c = code[i]
 
             val matchedOperator = operators.firstOrNull {
@@ -110,7 +114,6 @@ class PyLexer {
                     )
                 }
 
-                // Comment
                 c == '#' -> {
 
                     val start = i
@@ -127,7 +130,6 @@ class PyLexer {
                     )
                 }
 
-                // Identifier
                 c.isLetter() || c == '_' -> {
                     val start = i
 
@@ -147,7 +149,6 @@ class PyLexer {
                     )
                 }
 
-                // Numbers
                 c.isDigit() -> {
                     val start = i
 
@@ -166,7 +167,6 @@ class PyLexer {
                     )
                 }
 
-                // Whitespace
                 c == ' ' || c == '\t' -> {
                     val start = i
 
@@ -182,7 +182,6 @@ class PyLexer {
                     )
                 }
 
-                // Newline
                 c == '\n' -> {
                     tokens += Token(
                         TokenType.NEWLINE,
@@ -295,6 +294,7 @@ class PyLexer {
                 }
             }
         }
+        println("PyLexer: done, iterations=$iterations for ${code.length} chars")
         return tokens
     }
 }

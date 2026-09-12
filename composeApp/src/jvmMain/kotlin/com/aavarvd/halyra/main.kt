@@ -14,6 +14,7 @@ import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import com.aavarvd.halyra.ui.SplashScreen
 import kotlinx.coroutines.delay
+import java.awt.Frame
 import java.awt.GraphicsConfiguration
 import java.awt.GraphicsEnvironment
 import java.awt.Point
@@ -127,18 +128,50 @@ fun main() = application {
             icon = painterResource("images/icon.png"),
             state = mainWindowState,
             undecorated = useCustomTitlebar,
-            resizable = mainWindowState.placement != WindowPlacement.Maximized || !useCustomTitlebar
+            resizable = !useCustomTitlebar || mainWindowState.placement != WindowPlacement.Maximized
         ) {
             if (useCustomTitlebar) {
+                // Handle window state changes via AWT for reliability when undecorated
+                LaunchedEffect(mainWindowState.placement) {
+                    if (mainWindowState.placement == WindowPlacement.Maximized) {
+                        window.extendedState = Frame.MAXIMIZED_BOTH
+                    } else if (mainWindowState.placement == WindowPlacement.Floating) {
+                        window.extendedState = Frame.NORMAL
+                    }
+                }
+
+                LaunchedEffect(mainWindowState.isMinimized) {
+                    if (mainWindowState.isMinimized) {
+                        window.extendedState = Frame.ICONIFIED
+                    }
+                }
+
                 DisposableEffect(window) {
+                    val windowStateListener = object : java.awt.event.WindowStateListener {
+                        override fun windowStateChanged(e: java.awt.event.WindowEvent) {
+                            val state = e.newState
+                            val isMaximized = (state and Frame.MAXIMIZED_BOTH) == Frame.MAXIMIZED_BOTH
+                            val isMinimized = (state and Frame.ICONIFIED) == Frame.ICONIFIED
+                            
+                            if (isMaximized && mainWindowState.placement != WindowPlacement.Maximized) {
+                                mainWindowState.placement = WindowPlacement.Maximized
+                            } else if (!isMaximized && !isMinimized && mainWindowState.placement == WindowPlacement.Maximized) {
+                                mainWindowState.placement = WindowPlacement.Floating
+                            }
+                            
+                            if (isMinimized != mainWindowState.isMinimized) {
+                                mainWindowState.isMinimized = isMinimized
+                            }
+                        }
+                    }
+                    window.addWindowStateListener(windowStateListener)
+
                     fun applyMaxBounds() {
                         window.graphicsConfiguration?.let { cfg ->
                             val b = usableBounds(cfg)
                             window.maximizedBounds = b
                             if (mainWindowState.placement == WindowPlacement.Maximized) {
-                                java.awt.EventQueue.invokeLater {
-                                    (window as? java.awt.Frame)?.extendedState = java.awt.Frame.MAXIMIZED_BOTH
-                                }
+                                window.extendedState = Frame.MAXIMIZED_BOTH
                             } else {
                                 clampWindowToBounds(window, b)
                             }
@@ -157,6 +190,7 @@ fun main() = application {
 
                     onDispose {
                         window.removePropertyChangeListener(propertyListener)
+                        window.removeWindowStateListener(windowStateListener)
                     }
                 }
             }

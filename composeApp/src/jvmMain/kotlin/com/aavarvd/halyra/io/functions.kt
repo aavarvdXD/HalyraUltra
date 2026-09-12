@@ -3,6 +3,7 @@ package com.aavarvd.halyra.io
 import java.awt.FileDialog
 import java.awt.Frame
 import java.io.File
+import javax.swing.JFileChooser
 
 fun openFile(): Pair<File, String>? {
     val dialog = FileDialog(null as Frame?, "Open File", FileDialog.LOAD)
@@ -13,6 +14,19 @@ fun openFile(): Pair<File, String>? {
 
     val file = File(path)
     return file to file.readText()
+}
+
+fun openFolder(): File? {
+    val chooser = JFileChooser()
+    chooser.fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
+    chooser.dialogTitle = "Select Project Folder"
+    
+    val result = chooser.showOpenDialog(null)
+    return if (result == JFileChooser.APPROVE_OPTION) {
+        chooser.selectedFile
+    } else {
+        null
+    }
 }
 
 fun saveFileAs(content: String, suggestedName: String = "Untitled.py"): File? {

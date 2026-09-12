@@ -33,7 +33,7 @@ fun WindowScope.App(
     val appState = rememberAppState()
     val density = LocalDensity.current
     val coroutineScope = rememberCoroutineScope()
-    
+
     val fileManager = remember { FileManager(appState) }
     val pythonRunner = remember { PythonRunner(appState, coroutineScope) }
     val editorInputHandler = remember { EditorInputHandler(appState) }
@@ -100,108 +100,163 @@ fun WindowScope.App(
             onBackground = AppColors.Text
         )
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            if (useCustomTitlebar) {
-                AppTitleBar(windowState) {
-                    if (appState.anyModified) {
-                        appState.showExitConfirmation = true
-                    } else {
-                        onCloseRequest()
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                if (useCustomTitlebar) {
+                    AppTitleBar(windowState) {
+                        if (appState.anyModified) {
+                            appState.showExitConfirmation = true
+                        } else {
+                            onCloseRequest()
+                        }
+                    }
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .onPreviewKeyEvent { event ->
+                            val activeTab = appState.activeTab ?: return@onPreviewKeyEvent false
+                            AppHotkeys(
+                                event = event,
+                                text = activeTab.text,
+                                onTextChange = { appState.tabs[appState.activeTabIndex] = activeTab.copy(text = it) },
+                                onSave = { fileManager.saveCurrentFile() },
+                                onRun = { pythonRunner.runCurrentFile() },
+                                onNew = { fileManager.newFile() },
+                                onOpen = { fileManager.openFileFromDialog() },
+                                onFind = {
+                                    appState.searchState = if (appState.searchState.visible && !appState.searchState.replaceMode) {
+                                        SearchState()
+                                    } else {
+                                        appState.searchState.copy(visible = true, replaceMode = false)
+                                    }
+                                },
+                                onFindReplace = {
+                                    appState.searchState = if (appState.searchState.visible && appState.searchState.replaceMode) {
+                                        SearchState()
+                                    } else {
+                                        appState.searchState.copy(visible = true, replaceMode = true)
+                                    }
+                                }
+                            )
+                        }
+                        .focusable()
+                ) {
+                    Sidebar(
+                        onNew = { fileManager.newFile() },
+                        onOpen = { fileManager.openFileFromDialog() },
+                        onRun = {
+                            pythonRunner.runCurrentFile()
+                            appState.shellVisible = true
+                        },
+                        onSave = { fileManager.saveCurrentFile() },
+                        onToggleShell = { appState.shellVisible = !appState.shellVisible },
+                        onToggleProjectTree = {
+                            if (appState.projectRoot == null) {
+                                fileManager.openProjectFolder()
+                            } else {
+                                appState.projectTreeVisible = !appState.projectTreeVisible
+                            }
+                        }
+                    )
+
+                    if (appState.projectTreeVisible) {
+                        appState.projectRoot?.let { root ->
+                            FileTree(
+                                root = root,
+                                appState = appState,
+                                fileManager = fileManager
+                            )
+                        }
+                    }
+
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .background(AppColors.Background)
+                    ) {
+                        TabBar(
+                            tabs = appState.tabs,
+                            activeTabIndex = appState.activeTabIndex,
+                            onTabClick = { appState.activeTabIndex = it },
+                            onTabClose = { fileManager.closeTab(it) }
+                        )
+
+                        if (appState.searchState.visible) {
+                            FindBar(
+                                query = appState.searchState.query,
+                                replaceMode = appState.searchState.replaceMode,
+                                replaceText = appState.searchState.replaceText,
+                                onQueryChange = { appState.searchState = appState.searchState.copy(query = it) },
+                                onReplaceTextChange = { appState.searchState = appState.searchState.copy(replaceText = it) },
+                                onClose = { appState.searchState = SearchState() },
+                                onNext = {},
+                                onPrevious = {},
+                                onReplace = {},
+                                onReplaceAll = {}
+                            )
+                        }
+
+                        if (appState.tabs.isEmpty()) {
+                            NoFileOpenedView()
+                        } else {
+                            val activeTab = appState.activeTab!!
+                            val lineCount = activeTab.text.text.lineSequence().count().coerceAtLeast(1)
+
+                            Row(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                                EditorLineNumbers(lineCount, editorState, editorTextStyle)
+                                EditorPane(activeTab, editorState, editorInputHandler, editorTextStyle, Modifier.weight(1f))
+                            }
+                        }
+
+                        if (appState.shellVisible) {
+                            Terminal(appState)
+                        }
                     }
                 }
             }
 
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .onPreviewKeyEvent { event ->
-                        val activeTab = appState.activeTab ?: return@onPreviewKeyEvent false
-                        AppHotkeys(
-                            event = event,
-                            text = activeTab.text,
-                            onTextChange = { appState.tabs[appState.activeTabIndex] = activeTab.copy(text = it) },
-                            onSave = { fileManager.saveCurrentFile() },
-                            onRun = { pythonRunner.runCurrentFile() },
-                            onNew = { fileManager.newFile() },
-                            onOpen = { fileManager.openFileFromDialog() },
-                            onFind = {
-                                appState.searchState = if (appState.searchState.visible && !appState.searchState.replaceMode) {
-                                    SearchState()
-                                } else {
-                                    appState.searchState.copy(visible = true, replaceMode = false)
-                                }
-                            },
-                            onFindReplace = {
-                                appState.searchState = if (appState.searchState.visible && appState.searchState.replaceMode) {
-                                    SearchState()
-                                } else {
-                                    appState.searchState.copy(visible = true, replaceMode = true)
-                                }
-                            }
-                        )
-                    }
-                    .focusable()
-            ) {
-                Sidebar(
-                    onNew = { fileManager.newFile() },
-                    onOpen = { fileManager.openFileFromDialog() },
-                    onRun = {
-                        pythonRunner.runCurrentFile()
-                        appState.shellVisible = true
-                    },
-                    onSave = { fileManager.saveCurrentFile() },
-                    onToggleShell = { appState.shellVisible = !appState.shellVisible }
-                )
-
-                Column(
+            if (appState.isLoadingFile) {
+                Box(
                     modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .background(AppColors.Background)
+                        .fillMaxSize()
+                        .background(AppColors.Background.copy(alpha = 0.6f)),
+                    contentAlignment = Alignment.Center
                 ) {
-                    TabBar(
-                        tabs = appState.tabs,
-                        activeTabIndex = appState.activeTabIndex,
-                        onTabClick = { appState.activeTabIndex = it },
-                        onTabClose = { fileManager.closeTab(it) }
-                    )
-
-                    if (appState.searchState.visible) {
-                        FindBar(
-                            query = appState.searchState.query,
-                            replaceMode = appState.searchState.replaceMode,
-                            replaceText = appState.searchState.replaceText,
-                            onQueryChange = { appState.searchState = appState.searchState.copy(query = it) },
-                            onReplaceTextChange = { appState.searchState = appState.searchState.copy(replaceText = it) },
-                            onClose = { appState.searchState = SearchState() },
-                            onNext = {},
-                            onPrevious = {},
-                            onReplace = {},
-                            onReplaceAll = {}
-                        )
-                    }
-
-                    if (appState.tabs.isEmpty()) {
-                        NoFileOpenedView()
-                    } else {
-                        val activeTab = appState.activeTab!!
-                        val lineCount = activeTab.text.text.lineSequence().count().coerceAtLeast(1)
-
-                        Row(modifier = Modifier.weight(1f).fillMaxWidth()) {
-                            EditorLineNumbers(lineCount, editorState, editorTextStyle)
-                            EditorPane(activeTab, editorState, editorInputHandler, editorTextStyle, Modifier.weight(1f))
-                        }
-                    }
-
-                    if (appState.shellVisible) {
-                        Terminal(appState)
-                    }
+                    CircularProgressIndicator()
                 }
             }
         }
 
         if (appState.showExitConfirmation) {
             ExitConfirmationDialog(appState, onCloseRequest, onCloseCancelled)
+        }
+
+        if (appState.showFolderSelectionWarning) {
+            FolderSelectionWarningDialog(appState)
+        }
+
+        if (appState.showNewFileDialog) {
+            NewFileDialog(appState, fileManager)
+        }
+
+        appState.pendingLargeFile?.let { file ->
+            AlertDialog(
+                onDismissRequest = { appState.pendingLargeFile = null },
+                title = { Text("Large File") },
+                text = { Text("\"${file.name}\" is large (${file.length() / 1024} KB) and may take a while to open. Continue?") },
+                confirmButton = {
+                    Button(onClick = {
+                        appState.pendingLargeFile = null
+                        fileManager.openFile(file, forceOpen = true)
+                    }) { Text("Open Anyway") }
+                },
+                dismissButton = {
+                    Button(onClick = { appState.pendingLargeFile = null }) { Text("Cancel") }
+                }
+            )
         }
     }
 }

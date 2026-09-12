@@ -46,6 +46,10 @@ fun TabBar(
     onTabClose: (Int) -> Unit
 ) {
     val pythonIcon = remember { loadTabIcon("python.png") }
+    val fileIcon = remember { loadTabIcon("file.png") }
+    val textIcon = remember { loadTabIcon("text_dark.png") }
+    val gitignoreIcon = remember { loadTabIcon("gitignore.png") }
+    val xmlIcon = remember { loadTabIcon("xml_dark.png") }
     val listState = rememberLazyListState()
 
     val tabsCount = tabs.size
@@ -71,6 +75,13 @@ fun TabBar(
             ) {
                 itemsIndexed(tabs) { index, tab ->
                     val isActive = index == activeTabIndex
+                    val tabIcon = when {
+                        tab.title.endsWith(".py") -> pythonIcon
+                        tab.title.endsWith(".txt") -> textIcon
+                        tab.title.endsWith(".gitignore") -> gitignoreIcon
+                        tab.title.endsWith(".xml") -> xmlIcon
+                        else -> fileIcon
+                    }
                     Row(
                         modifier = Modifier
                             .fillMaxHeight()
@@ -81,8 +92,8 @@ fun TabBar(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Image(
-                            bitmap = pythonIcon,
-                            contentDescription = "Python",
+                            bitmap = tabIcon,
+                            contentDescription = "Tab Icon",
                             modifier = Modifier.size(20.dp).padding(end = 6.dp)
                         )
 
@@ -104,8 +115,6 @@ fun TabBar(
                                 .clickable { onTabClose(index) }
                         )
                     }
-
-                    // Separator
                     if (!isActive && index < tabs.size - 1 && index + 1 != activeTabIndex) {
                         Box(
                             modifier = Modifier

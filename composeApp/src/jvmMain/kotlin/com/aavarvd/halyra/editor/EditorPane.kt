@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.aavarvd.halyra.ui.AppColors
 
@@ -30,6 +31,9 @@ fun EditorPane(
         )
     }
 
+    val isPythonFile = activeTab.file?.name?.endsWith(".py") == true
+    val pythonTransformation = remember { PythonHighLightTransformation() }
+
     CompositionLocalProvider(LocalTextSelectionColors provides selectionColors) {
         BasicTextField(
             value = activeTab.text,
@@ -43,7 +47,7 @@ fun EditorPane(
                 .onPreviewKeyEvent { inputHandler.handleKeyEvent(it) },
             textStyle = textStyle,
             cursorBrush = SolidColor(AppColors.Cursor),
-            visualTransformation = PythonHighLightTransformation(),
+            visualTransformation = if (isPythonFile) pythonTransformation else VisualTransformation.None,
             onTextLayout = { editorState.textLayout = it },
             singleLine = false
         )

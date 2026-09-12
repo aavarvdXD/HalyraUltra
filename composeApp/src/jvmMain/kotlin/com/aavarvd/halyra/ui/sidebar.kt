@@ -95,7 +95,8 @@ fun Sidebar(
     onOpen: () -> Unit,
     onRun: () -> Unit,
     onSave: () -> Unit,
-    onToggleShell: () -> Unit
+    onToggleShell: () -> Unit,
+    onToggleProjectTree: () -> Unit
 ) {
     val newIcon = remember {
         loadIcon("new.png")
@@ -115,6 +116,10 @@ fun Sidebar(
 
     val shellIcon = remember {
         loadIcon("shell.png")
+    }
+
+    val folderIcon = remember {
+        loadIcon("folder.png")
     }
 
     Column(
@@ -172,6 +177,16 @@ fun Sidebar(
             icon = shellIcon,
             hint = "Toggle Shell",
             onClick = onToggleShell
+        )
+
+        Spacer(
+            modifier = Modifier.height(4.dp)
+        )
+
+        SidebarButton(
+            icon = folderIcon,
+            hint = "Project Structure",
+            onClick = onToggleProjectTree
         )
     }
 }
